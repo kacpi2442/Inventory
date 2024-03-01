@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import Index
 from datetime import datetime
 
 # Colors.
@@ -9,15 +10,40 @@ db = SQLAlchemy(app)
 
 class Entity(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100))
-    parent = db.Column(db.Integer)
+    parent = db.Column(db.Integer, db.ForeignKey('entity.id'))
+    name = db.Column(db.String(100), nullable=False)
     created = db.Column(db.DateTime())
     modified = db.Column(db.DateTime())
 
+class Property(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+
+class EntityProperties(db.Model):
+    entity_id = db.Column(db.Integer, db.ForeignKey('entity.id'), primary_key=True)
+    property_id = db.Column(db.Integer, db.ForeignKey('property.id'), primary_key=True)
+    value = db.Column(db.String(100))
+
+class EntityPhoto(db.Model):
+    entity_id = db.Column(db.Integer, db.ForeignKey('entity.id'), primary_key=True)
+    image = db.Column(db.LargeBinary, nullable=False)
+
+class Owner(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+
+class Ownership(db.Model):
+    entity_id = db.Column(db.Integer, db.ForeignKey('entity.id'), primary_key=True)
+    owner_id = db.Column(db.Integer, db.ForeignKey('owner.id'), primary_key=True)
+    own = db.Column(db.Numeric(10,2), nullable=False)
+
 class Barcode(db.Model):
     entity_id = db.Column(db.Integer, db.ForeignKey('entity.id'), primary_key=True)
-    barcode = db.Column(db.String(100))
+    barcode = db.Column(db.String(100), unique=True)
 
+idx_entity_name = Index('idx_entity_name', Entity.name)
+idx_property_name = Index('idx_property_name', Property.name)
+idx_owner_name = Index('idx_owner_name', Owner.name)
 
 @app.route('/') 
 def index():
@@ -25,7 +51,7 @@ def index():
     for item in items:
         barcode = Barcode.query.filter_by(entity_id=item.id).first()
         item.barcode = barcode.barcode if barcode else None
-        item.parent = Entity.query.get(item.parent).name if item.parent else None
+        item.parent = db.session.get(Entity, item.parent).name if item.parent else None
     return render_template('index.html', items=items)
 
 @app.route('/add', methods=['POST'])
