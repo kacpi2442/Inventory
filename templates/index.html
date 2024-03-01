@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home Inventory</title>
+    <style>
+        body {
+            background-color: #2e2d2b;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid white;
+        }
+        th {
+            background-color: #2e2d2b;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #4d4c4a;
+        }
+        .container {
+            margin: 20px;
+        }
+        .form-container {
+            margin-bottom: 20px;
+        }
+        .form-container input[type=text], .form-container input[type=date], .form-container input[type=number] {
+            width: 100%;
+            padding: 12px 20px;
+            margin: 8px 0;
+            display: inline-block;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+        .form-container input[type=submit] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+        }
+        .form-container input[type=submit]:hover {
+            background-color: #45a049;
+        }
+        .delete-button {
+            background-color: #f44336;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            cursor: pointer;
+            float: right;
+        }
+        .delete-button:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Home Inventory</h1>
+        <div class="form-container">
+            <form action="/add" method="POST">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" required><br>
+
+                <label for="barcode">Barcode:</label>
+                <input type="text" id="barcode" name="barcode" required><br>
+
+                <label for="parent">Location:</label>
+                <input type="text" id="parent" name="parent" required><br>
+
+                <input type="submit" value="Add Item">
+        </div>
+        <table>
+            <tr>
+                <th>Name</th>
+                <th>Barcode</th>
+                <th>Location</th>
+                <!-- <th>Description</th> -->
+                <th>Creation date</th>
+                <th>Modify date</th>
+                <th></th>
+            </tr>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.name }}</td>
+                <td>{{ item.barcode }}</td>
+                <td>{{ item.parent }}</td>
+                <td>{{ item.created }}</td>
+                <td>{{ item.modified }}</td>
+                <td>
+                    <form action="/delete/{{ item.id }}" method="POST">
+                        <button class="delete-button" type="submit">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</body>
+</html>
