@@ -45,14 +45,44 @@ idx_entity_name = Index('idx_entity_name', Entity.name)
 idx_property_name = Index('idx_property_name', Property.name)
 idx_owner_name = Index('idx_owner_name', Owner.name)
 
+app_header = 'Inventory'
+
 @app.route('/') 
 def index():
     items = Entity.query.all()
     for item in items:
         barcode = Barcode.query.filter_by(entity_id=item.id).first()
         item.barcode = barcode.barcode if barcode else None
-        item.parent = db.session.get(Entity, item.parent).name if item.parent else None
-    return render_template('index.html', items=items)
+        if item.parent:
+            if db.session.get(Entity, item.parent):
+                item.parent = db.session.get(Entity, item.parent).name
+            else:
+                item.parent = "Location not found"
+        else:
+            item.parent = None
+        # item.created = item.created.strftime('%Y-%m-%d %H:%M:%S')
+        # item.modified = item.modified.strftime('%Y-%m-%d %H:%M:%S')
+        ownership = Ownership.query.filter_by(entity_id=item.id).first() # Todo: Handle multiple owners.
+        item.own = ownership.own if ownership else None
+        if item.own == 100:
+            owner = Owner.query.get(ownership.owner_id)
+            item.owner_name = owner.name if owner else None
+        elif item.own:
+            item.owner_name = 'Shared'
+        else:
+            item.owner_name = None
+    return render_template('index.html', items=items, header=app_header)
+
+@app.route('/details/<int:item_id>', methods=['GET'])
+def details(item_id):
+    item = Entity.query.get(item_id)
+    barcode = Barcode.query.filter_by(entity_id=item.id).first()
+    item.barcode = barcode.barcode if barcode else None
+    item.parent = db.session.get(Entity, item.parent).name if item.parent else None
+    item.created = item.created.strftime('%Y-%m-%d %H:%M:%S')
+    item.modified = item.modified.strftime('%Y-%m-%d %H:%M:%S')
+    ownership = Ownership.query.filter_by(entity_id=item.id).first()
+    return render_template('details.html', item=item, ownership=ownership)
 
 @app.route('/add', methods=['POST'])
 def add():

@@ -1,0 +1,65 @@
+body {
+    background-color: #2e2d2b;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+th, td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid white;
+}
+th {
+    background-color: #2e2d2b;
+    color: white;
+}
+tr:nth-child(even) {
+    background-color: #4d4c4a;
+}
+.container {
+    margin: 20px;
+}
+.form-container {
+    margin-bottom: 20px;
+}
+.form-container input[type=text], .form-container input[type=date], .form-container input[type=number] {
+    width: 100%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+.form-container input[type=submit] {
+    background-color: #4CAF50;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+}
+.form-container input[type=submit]:hover {
+    background-color: #45a049;
+}
+
+button {
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    cursor: pointer;
+    float: right;
+}
+
+.delete-button {
+    background-color: #f44336;
+}
+
+.details-button {
+    background-color: #369bf4;
+}
+.delete-button:hover {
+    background-color: #d32f2f;
+}
