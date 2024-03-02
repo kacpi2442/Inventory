@@ -41,9 +41,9 @@
                 <td>{{ item.created }}</td>
                 <td>{{ item.modified }}</td>
                 <td>
-                    <form action="/details/{{ item.id }}" method="GET">
+                    <a href="/details/{{ item.id }}" class="button details-button">
                         <button class="button details-button" type="submit">Details</button>
-                    </form>
+                    </a>
                 </td>
                 <td>
                     <form action="/delete/{{ item.id }}" method="POST">

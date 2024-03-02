@@ -1,3 +1,4 @@
+import json
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Index
@@ -75,14 +76,31 @@ def index():
 
 @app.route('/details/<int:item_id>', methods=['GET'])
 def details(item_id):
-    item = Entity.query.get(item_id)
-    barcode = Barcode.query.filter_by(entity_id=item.id).first()
-    item.barcode = barcode.barcode if barcode else None
-    item.parent = db.session.get(Entity, item.parent).name if item.parent else None
-    item.created = item.created.strftime('%Y-%m-%d %H:%M:%S')
-    item.modified = item.modified.strftime('%Y-%m-%d %H:%M:%S')
-    ownership = Ownership.query.filter_by(entity_id=item.id).first()
-    return render_template('details.html', item=item, ownership=ownership)
+    # item = Entity.query.get(item_id)
+    item = db.get_or_404(Entity, item_id)
+    # barcodes = Barcode.query.filter_by(entity_id=item.id).all()
+    barcodes = db.session.execute(db.select(Barcode.barcode).where(Barcode.entity_id==item_id)).all()
+    parent_name = "Location not found"
+    if item.parent:
+        if db.session.get(Entity, item.parent):
+            parent_name = db.session.get(Entity, item.parent).name
+    ownership = db.session.query(Ownership.own, Owner.name).join(Owner).filter(Ownership.entity_id == item_id).all()
+    # children = db.session.execute(db.select(Entity).where(Entity.parent==item_id)).all()
+    children = Entity.query.where(Entity.parent==item_id).all()
+    for child in children:
+        ch_barcode = Barcode.query.filter_by(entity_id=child.id).first()
+        child.barcode = ch_barcode.barcode if ch_barcode else None
+        ch_ownership = Ownership.query.filter_by(entity_id=child.id).first()
+        child.own = ch_ownership.own if ch_ownership else None
+        if child.own == 100:
+            owner = Owner.query.get(ch_ownership.owner_id)
+            child.owner_name = owner.name if owner else None
+        elif child.own:
+            child.owner_name = 'Shared'
+        else:
+            child.owner_name = None
+
+    return render_template('details.html', item=item, ownership=ownership, barcodes=barcodes, header=item.name, children=children, parent_name=parent_name)
 
 @app.route('/add', methods=['POST'])
 def add():

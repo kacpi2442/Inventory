@@ -63,3 +63,13 @@ button {
 .delete-button:hover {
     background-color: #d32f2f;
 }
+
+.details-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.details-container .column {
+    flex: 1;
+    padding: 10px;
+}

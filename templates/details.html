@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ header }}</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>{{ header }}</h1>
+        <div class="details-container">
+            <div class="column">
+                <h2>Item Details</h2>
+                <p><strong>Name:</strong> {{ item.name }}</p>
+                <p>
+                    {% if barcodes|length > 1 %}
+                    <strong>Barcodes:</strong>
+                    <ul>
+                        {% for barcode in barcodes %}
+                        <li>{{ barcode[0] }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% elif barcode|length == 1 %}
+                    <strong>Barcode:</strong> {{ barcodes[0][0] }}
+                    {% else %}
+                    <strong>Barcode:</strong> No barcode found
+                    {% endif %}
+                </p>
+                <p><strong>Location:</strong> {% if item.parent %}<a href="{{ item.parent }}">{{ parent_name }}</a>{% endif %}</p>
+            </div>
+            <div class="column">
+                <h2>Ownership Details</h2>
+                {% for owner in ownership %}
+                <p><strong>Owner:</strong> {{ owner.name }}{% if owner.own != 100 %} - {{ owner.own }}%{% endif %}</p>
+                {% endfor %}
+            </div>
+        </div>
+        {% if children|length > 0 %}
+        <table>
+            <tr>
+                <th>Name</th>
+                <th>Barcode</th>
+                <th>Location</th>
+                <th>Ownership</th>
+                <!-- <th>Description</th> -->
+                <th>Creation date</th>
+                <th>Modify date</th>
+                <th></th>
+                <th></th>
+            </tr>
+            {% for child in children %}
+            <tr>
+                <td>{{ child.name }}</td>
+                <td>{{ child.barcode }}</td>
+                <td>{{ child.parent }}</td>
+                <td>{{ child.owner_name }}</td>
+                <td>{{ child.created }}</td>
+                <td>{{ child.modified }}</td>
+                <td>
+                    <a href="/details/{{ child.id }}" class="button details-button">
+                        <button class="button details-button" type="submit">Details</button>
+                    </a>
+                </td>
+                <td>
+                    <form action="/delete/{{ child.id }}" method="POST">
+                        <button class="button delete-button" type="submit">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% endif %}
+    </div>
+</body>
+</html>
