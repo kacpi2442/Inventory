@@ -1,12 +1,5 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{ header }}</title>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <div class="container">
-        <h1>{{ header }}</h1>
+{% extends 'base.html' %}
+{% block topContainer %}
         <div class="form-container">
             <form action="/add" method="POST">
                 <label for="name">Name:</label>
@@ -19,40 +12,6 @@
                 <input type="text" id="parent" name="parent" required><br>
 
                 <input type="submit" value="Add Item">
+            </form>
         </div>
-        <table>
-            <tr>
-                <th>Name</th>
-                <th>Barcode</th>
-                <th>Location</th>
-                <th>Ownership</th>
-                <!-- <th>Description</th> -->
-                <th>Creation date</th>
-                <th>Modify date</th>
-                <th></th>
-                <th></th>
-            </tr>
-            {% for item in items %}
-            <tr>
-                <td>{{ item.name }}</td>
-                <td>{{ item.barcode }}</td>
-                <td>{{ item.parent }}</td>
-                <td>{{ item.owner_name }}</td>
-                <td>{{ item.created }}</td>
-                <td>{{ item.modified }}</td>
-                <td>
-                    <a href="/details/{{ item.id }}" class="button details-button">
-                        <button class="button details-button" type="submit">Details</button>
-                    </a>
-                </td>
-                <td>
-                    <form action="/delete/{{ item.id }}" method="POST">
-                        <button class="button delete-button" type="submit">Delete</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </table>
-    </div>
-</body>
-</html>
+{% endblock %}

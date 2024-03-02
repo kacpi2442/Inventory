@@ -100,7 +100,7 @@ def details(item_id):
         else:
             child.owner_name = None
 
-    return render_template('details.html', item=item, ownership=ownership, barcodes=barcodes, header=item.name, children=children, parent_name=parent_name)
+    return render_template('details.html', detailedItem=item, ownership=ownership, barcodes=barcodes, header=item.name, items=children, parent_name=parent_name)
 
 @app.route('/add', methods=['POST'])
 def add():
