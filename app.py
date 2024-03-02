@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Index
 from datetime import datetime
+import base64
 
 # Colors.
 app = Flask(__name__)
@@ -63,7 +64,7 @@ def index():
             item.parent = None
         # item.created = item.created.strftime('%Y-%m-%d %H:%M:%S')
         # item.modified = item.modified.strftime('%Y-%m-%d %H:%M:%S')
-        ownership = Ownership.query.filter_by(entity_id=item.id).first() # Todo: Handle multiple owners.
+        ownership = Ownership.query.filter_by(entity_id=item.id).first() # Todo: Handle multiple owners in tooltip.
         item.own = ownership.own if ownership else None
         if item.own == 100:
             owner = Owner.query.get(ownership.owner_id)
@@ -76,16 +77,13 @@ def index():
 
 @app.route('/details/<int:item_id>', methods=['GET'])
 def details(item_id):
-    # item = Entity.query.get(item_id)
     item = db.get_or_404(Entity, item_id)
-    # barcodes = Barcode.query.filter_by(entity_id=item.id).all()
     barcodes = db.session.execute(db.select(Barcode.barcode).where(Barcode.entity_id==item_id)).all()
     parent_name = "Location not found"
     if item.parent:
         if db.session.get(Entity, item.parent):
             parent_name = db.session.get(Entity, item.parent).name
     ownership = db.session.query(Ownership.own, Owner.name).join(Owner).filter(Ownership.entity_id == item_id).all()
-    # children = db.session.execute(db.select(Entity).where(Entity.parent==item_id)).all()
     children = Entity.query.where(Entity.parent==item_id).all()
     for child in children:
         ch_barcode = Barcode.query.filter_by(entity_id=child.id).first()
@@ -99,8 +97,13 @@ def details(item_id):
             child.owner_name = 'Shared'
         else:
             child.owner_name = None
+    image_data = db.session.execute(db.select(EntityPhoto.image).where(EntityPhoto.entity_id==item_id)).first()
+    if image_data:
+        image = base64.b64encode(image_data[0]).decode('utf-8')
+    else:
+        image = None
 
-    return render_template('details.html', detailedItem=item, ownership=ownership, barcodes=barcodes, header=item.name, items=children, parent_name=parent_name)
+    return render_template('details.html', detailedItem=item, ownership=ownership, barcodes=barcodes, header=item.name, items=children, parent_name=parent_name, image=image)
 
 @app.route('/add', methods=['POST'])
 def add():

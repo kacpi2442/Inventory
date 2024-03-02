@@ -1,6 +1,13 @@
 {% extends 'base.html' %}
 {% block topContainer %}
 <div class="details-container">
+    <div class="column itemImage">
+        {% if image %}
+        <img src="data:image/jpeg;base64, {{ image }}" alt="Image">
+        {% else %}
+        <img src="{{ url_for('static', filename='no-image.jpg') }}" alt="No image">
+        {% endif %}
+    </div>
     <div class="column">
         <h2>Item Details</h2>
         <p><strong>Name:</strong> {{ detailedItem.name }}</p>
@@ -12,7 +19,7 @@
                 <li>{{ barcode[0] }}</li>
                 {% endfor %}
             </ul>
-            {% elif barcode|length == 1 %}
+            {% elif barcodes|length == 1 %}
             <strong>Barcode:</strong> {{ barcodes[0][0] }}
             {% else %}
             <strong>Barcode:</strong> No barcode found
@@ -25,6 +32,10 @@
         {% for owner in ownership %}
         <p><strong>Owner:</strong> {{ owner.name }}{% if owner.own != 100 %} - {{ owner.own }}%{% endif %}</p>
         {% endfor %}
+        {% if ownership|length == 0 %}
+        <p>No ownership found</p>
+        {% endif %}
     </div>
 </div>
+{% if items|length > 0 %}<h3>Entity content:</h3>{% endif %}
 {% endblock %}
