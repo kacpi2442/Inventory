@@ -17,27 +17,39 @@
                 <th>Barcode</th>
                 <th>Location</th>
                 <th>Ownership</th>
-                <!-- <th>Description</th> -->
                 <th>Creation date</th>
                 <th>Modify date</th>
-                <th></th>
                 <th></th>
             </tr>
             {% for item in items %}
             <tr>
                 <td>{{ item.name }}</td>
-                <td>{{ item.barcode }}</td>
+                <td title="{% if item.barcodes|length > 1 %}{% for barcode in item.barcodes %}{{ barcode.barcode }}, {% endfor %}{% endif %}">
+                    {% if item.barcodes|length > 1 %}
+                    {{ item.barcodes[0].barcode }} +
+                    {% elif item.barcodes|length == 1 %}
+                    {{ item.barcodes[0].barcode }}
+                    {% else %}
+                    No barcode
+                    {% endif %}
+                </td>
                 <td>{{ item.parent }}</td>
-                <td>{{ item.owner_name }}</td>
+                <td title="{% if item.ownerships|length > 1 %}{% for ownership in item.ownerships %}{{ ownership.name }} - {{ ownership.own }}%&#10;{% endfor %}{% endif %}">
+                    {% if item.ownerships|length > 1 %}
+                    Shared
+                    {% elif item.ownerships|length == 1 %}
+                    {{ item.ownerships[0].name }}
+                    {% else %}
+                    No owner
+                    {% endif %}
+                </td>
                 <td>{{ item.created }}</td>
                 <td>{{ item.modified }}</td>
                 <td>
                     <a href="/details/{{ item.id }}" class="button details-button">
                         <button class="button details-button" type="submit">Details</button>
                     </a>
-                </td>
-                <td>
-                    <form action="/delete/{{ item.id }}" method="POST">
+                    <form action="/delete/{{ item.id }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete &quot;{{ item.name }}&quot;?');">
                         <button class="button delete-button" type="submit">Delete</button>
                     </form>
                 </td>

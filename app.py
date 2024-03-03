@@ -53,26 +53,15 @@ app_header = 'Inventory'
 def index():
     items = Entity.query.all()
     for item in items:
-        barcode = Barcode.query.filter_by(entity_id=item.id).first()
-        item.barcode = barcode.barcode if barcode else None
+        item.barcodes = db.session.execute(db.select(Barcode.barcode).where(Barcode.entity_id==item.id)).all()
         if item.parent:
             if db.session.get(Entity, item.parent):
                 item.parent = db.session.get(Entity, item.parent).name
             else:
-                item.parent = "Location not found"
-        else:
-            item.parent = None
+                item.parent = "Location does not exist"
         # item.created = item.created.strftime('%Y-%m-%d %H:%M:%S')
         # item.modified = item.modified.strftime('%Y-%m-%d %H:%M:%S')
-        ownership = Ownership.query.filter_by(entity_id=item.id).first() # Todo: Handle multiple owners in tooltip.
-        item.own = ownership.own if ownership else None
-        if item.own == 100:
-            owner = Owner.query.get(ownership.owner_id)
-            item.owner_name = owner.name if owner else None
-        elif item.own:
-            item.owner_name = 'Shared'
-        else:
-            item.owner_name = None
+        item.ownerships = db.session.query(Ownership.own, Owner.name).join(Owner).filter(Ownership.entity_id == item.id).all()
     return render_template('index.html', items=items, header=app_header)
 
 @app.route('/details/<int:item_id>', methods=['GET'])
@@ -91,17 +80,10 @@ def details(item_id):
     # Get the children.
     children = Entity.query.where(Entity.parent==item_id).all()
     for child in children:
-        ch_barcode = Barcode.query.filter_by(entity_id=child.id).first()
-        child.barcode = ch_barcode.barcode if ch_barcode else None
-        ch_ownership = Ownership.query.filter_by(entity_id=child.id).first()
-        child.own = ch_ownership.own if ch_ownership else None
-        if child.own == 100:
-            owner = Owner.query.get(ch_ownership.owner_id)
-            child.owner_name = owner.name if owner else None
-        elif child.own:
-            child.owner_name = 'Shared'
-        else:
-            child.owner_name = None
+        ch_barcodes = db.session.execute(db.select(Barcode.barcode).where(Barcode.entity_id==child.id)).all()
+        child.barcodes = ch_barcodes if ch_barcodes else None
+        ch_ownerships = db.session.query(Ownership.own, Owner.name).join(Owner).filter(Ownership.entity_id == child.id).all()
+        child.ownerships = ch_ownerships if ch_ownerships else None
     # Get the image. TODO: Handle multiple images.
     image_data = db.session.execute(db.select(EntityPhoto.image).where(EntityPhoto.entity_id==item_id)).first()
     if image_data:
