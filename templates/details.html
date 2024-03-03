@@ -35,7 +35,14 @@
         {% if ownership|length == 0 %}
         <p>No ownership found</p>
         {% endif %}
+        <h2>Extra properties:</h2>
+        {% for prop in properties %}
+        <p><strong>{{ prop[0] }}:</strong> {{ prop[1] }}</p>
+        {% endfor %}
+        {% if properties|length == 0 %}
+        <p>No extra properties found</p>
+        {% endif %}
     </div>
 </div>
-{% if items|length > 0 %}<h3>Entity content:</h3>{% endif %}
+{% if items|length > 0 %}<h2>Entity content:</h2>{% endif %}
 {% endblock %}

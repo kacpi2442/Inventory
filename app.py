@@ -77,13 +77,18 @@ def index():
 
 @app.route('/details/<int:item_id>', methods=['GET'])
 def details(item_id):
+    # Get the item.
     item = db.get_or_404(Entity, item_id)
+    # Get the barcode.
     barcodes = db.session.execute(db.select(Barcode.barcode).where(Barcode.entity_id==item_id)).all()
+    # Get the parent name.
     parent_name = "Location not found"
     if item.parent:
         if db.session.get(Entity, item.parent):
             parent_name = db.session.get(Entity, item.parent).name
+    # Get the ownerships.
     ownership = db.session.query(Ownership.own, Owner.name).join(Owner).filter(Ownership.entity_id == item_id).all()
+    # Get the children.
     children = Entity.query.where(Entity.parent==item_id).all()
     for child in children:
         ch_barcode = Barcode.query.filter_by(entity_id=child.id).first()
@@ -97,13 +102,24 @@ def details(item_id):
             child.owner_name = 'Shared'
         else:
             child.owner_name = None
+    # Get the image. TODO: Handle multiple images.
     image_data = db.session.execute(db.select(EntityPhoto.image).where(EntityPhoto.entity_id==item_id)).first()
     if image_data:
         image = base64.b64encode(image_data[0]).decode('utf-8')
     else:
         image = None
+    # Get the properties.
+    properties = db.session.query(Property.name, EntityProperties.value).join(EntityProperties).where(EntityProperties.entity_id == item_id).all()
 
-    return render_template('details.html', detailedItem=item, ownership=ownership, barcodes=barcodes, header=item.name, items=children, parent_name=parent_name, image=image)
+    return render_template('details.html', 
+                           detailedItem=item, 
+                           ownership=ownership, 
+                           barcodes=barcodes, 
+                           header=item.name, 
+                           items=children, 
+                           parent_name=parent_name, 
+                           image=image,
+                           properties=properties)
 
 @app.route('/add', methods=['POST'])
 def add():
