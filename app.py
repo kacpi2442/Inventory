@@ -149,9 +149,9 @@ def update_property(item_id):
     else:
         new_property = EntityProperties(entity_id=item_id, property_id=property_id, value=value)
         db.session.add(new_property)
-    db.session.commit()
     # Update the modified date.
     item.modified = datetime.now()
+    db.session.commit()
     return redirect(url_for('index'))
 
 # Add a new photo.
