@@ -3,10 +3,33 @@
 <div class="details-container">
     <div class="column itemImage">
         {% if image %}
-        <img src="data:image/jpeg;base64, {{ image }}" alt="Image">
+        <img src="data:image/jpeg;base64, {{ image }}" alt="Image" />
         {% else %}
-        <img src="{{ url_for('static', filename='no-image.jpg') }}" alt="No image">
+        <img src="{{ url_for('static', filename='no-image.jpg') }}" alt="No image" />
         {% endif %}
+        <input type="file" name="photo" id="photo-upload" accept="image/jpeg" style="display: none;">
+        <script>
+            document.getElementById('photo-upload').addEventListener('change', function(e) {
+                var file = e.target.files[0];
+                var reader = new FileReader();
+                // Send post request with file to /add_photo/<int:item_id>
+                var formData = new FormData();
+                formData.append('photo', file);
+                fetch('/add_photo/{{ detailedItem.id }}', {
+                    method: 'POST',
+                    body: formData
+                })
+                reader.onloadend = function () {
+                    document.querySelector('.itemImage img').src = reader.result;
+                    console.log(baseString); 
+                };
+                reader.readAsDataURL(file);
+                // log success or error
+                console.log('Photo uploaded');
+
+            });
+        </script>
+        <label for="photo-upload" class="upload-button">Upload Photo</label>
     </div>
     <div class="column">
         <h2>Item Details</h2>

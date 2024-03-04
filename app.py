@@ -27,7 +27,8 @@ class EntityProperties(db.Model):
     value = db.Column(db.String(100))
 
 class EntityPhoto(db.Model):
-    entity_id = db.Column(db.Integer, db.ForeignKey('entity.id'), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    entity_id = db.Column(db.Integer, db.ForeignKey('entity.id'))
     image = db.Column(db.LargeBinary, nullable=False)
 
 class Owner(db.Model):
@@ -40,8 +41,8 @@ class Ownership(db.Model):
     own = db.Column(db.Numeric(10,2), nullable=False)
 
 class Barcode(db.Model):
-    entity_id = db.Column(db.Integer, db.ForeignKey('entity.id'), primary_key=True)
-    barcode = db.Column(db.String(100), unique=True)
+    entity_id = db.Column(db.Integer, db.ForeignKey('entity.id'))
+    barcode = db.Column(db.String(100), unique=True, primary_key=True)
 
 idx_entity_name = Index('idx_entity_name', Entity.name)
 idx_property_name = Index('idx_property_name', Property.name)
@@ -134,6 +135,37 @@ def update(item_id):
     barcode.barcode = request.form['barcode']
     db.session.commit()
     return redirect(url_for('index'))
+
+# Update one selected property.
+@app.route('/update_property/<int:item_id>', methods=['POST'])
+def update_property(item_id):
+    item = Entity.query.get(item_id)
+    property_id = request.form['property']
+    value = request.form['value']
+    # Check if the property already exists.
+    existing = db.session.query(EntityProperties).filter(EntityProperties.entity_id==item_id, EntityProperties.property_id==property_id).first()
+    if existing:
+        existing.value = value
+    else:
+        new_property = EntityProperties(entity_id=item_id, property_id=property_id, value=value)
+        db.session.add(new_property)
+    db.session.commit()
+    # Update the modified date.
+    item.modified = datetime.now()
+    return redirect(url_for('index'))
+
+# Add a new photo.
+@app.route('/add_photo/<int:item_id>', methods=['POST'])
+def add_photo(item_id):
+    item = Entity.query.get(item_id)
+    photo = request.files['photo']
+    photo = EntityPhoto(entity_id=item_id, image=photo.read())
+    db.session.add(photo)
+    db.session.commit()
+    # Update the modified date.
+    item.modified = datetime.now()
+    return redirect(url_for('index'))
+
 
 
 @app.route('/delete/<int:item_id>', methods=['POST'])
