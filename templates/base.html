@@ -18,6 +18,7 @@
                 <th>Barcode</th>
                 <th>Location</th> <!-- Parent, to be deleted from showing -->
                 <th>Ownership</th>
+                <th>Child count</th>
                 <th>Creation date</th>
                 <th>Modify date</th>
                 <th></th>
@@ -34,7 +35,7 @@
                     No barcode
                     {% endif %}
                 </td>
-                <td>{{ item.parent }}</td>
+                <td>{{ item.parent_name }}</td>
                 <td title="{% if item.ownerships|length > 1 %}{% for ownership in item.ownerships %}{{ ownership.name }} - {{ ownership.own }}%&#10;{% endfor %}{% endif %}">
                     {% if item.ownerships|length > 1 %}
                     Shared
@@ -44,6 +45,7 @@
                     No owner
                     {% endif %}
                 </td>
+                <td>{{ item.child_count }}</td>
                 <td>{{ item.created }}</td>
                 <td>{{ item.modified }}</td>
                 <td>

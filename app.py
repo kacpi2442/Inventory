@@ -3,11 +3,15 @@ from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Index
 from datetime import datetime
+import os
 import base64
 
+basedir = os.path.abspath(os.path.dirname(__file__))
+
 # Colors.
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///inventory.db'
+app = Flask(__name__, instance_relative_config=True)
+app.config['SQLALCHEMY_DATABASE_URI'] =\
+        'sqlite:///' + os.path.join(basedir, 'instance/inventory.db')
 db = SQLAlchemy(app)
 
 class Entity(db.Model):
@@ -57,11 +61,10 @@ def index():
         item.barcodes = db.session.execute(db.select(Barcode.barcode).where(Barcode.entity_id==item.id)).all()
         if item.parent:
             if db.session.get(Entity, item.parent):
-                item.parent = db.session.get(Entity, item.parent).name
+                item.parent_name = db.session.get(Entity, item.parent).name
             else:
-                item.parent = "Location does not exist"
-        # item.created = item.created.strftime('%Y-%m-%d %H:%M:%S')
-        # item.modified = item.modified.strftime('%Y-%m-%d %H:%M:%S')
+                item.parent_name = "Location does not exist"
+        item.child_count = Entity.query.where(Entity.parent==item.id).count()
         item.ownerships = db.session.query(Ownership.own, Owner.name).join(Owner).filter(Ownership.entity_id == item.id).all()
     return render_template('index.html', items=items, header=app_header)
 
@@ -85,6 +88,7 @@ def details(item_id):
         child.barcodes = ch_barcodes if ch_barcodes else None
         ch_ownerships = db.session.query(Ownership.own, Owner.name).join(Owner).filter(Ownership.entity_id == child.id).all()
         child.ownerships = ch_ownerships if ch_ownerships else None
+        child.parent_name = item.name
     # Get the image. TODO: Handle multiple images.
     image_data = db.session.execute(db.select(EntityPhoto.image).where(EntityPhoto.entity_id==item_id)).first()
     if image_data:
