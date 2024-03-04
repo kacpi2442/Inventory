@@ -16,10 +16,16 @@ db = SQLAlchemy(app)
 
 class Entity(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    parent = db.Column(db.Integer, db.ForeignKey('entity.id'))
+    parent_id = db.Column(db.Integer, db.ForeignKey('entity.id'))
     name = db.Column(db.String(100), nullable=False)
     created = db.Column(db.DateTime())
     modified = db.Column(db.DateTime())
+    barcodes = db.relationship('Barcode', backref='entity', lazy=True)
+    children = db.relationship('Entity', back_populates="parent", lazy=True)
+    parent = db.relationship('Entity', back_populates="children", remote_side=[id], lazy=True)
+    ownerships = db.relationship('Ownership', backref='entity', lazy=True)
+    properties = db.relationship('EntityProperties', backref='entity', lazy=True)
+    photos = db.relationship('EntityPhoto', backref='entity', lazy=True)
 
 class Property(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -29,6 +35,7 @@ class EntityProperties(db.Model):
     entity_id = db.Column(db.Integer, db.ForeignKey('entity.id'), primary_key=True)
     property_id = db.Column(db.Integer, db.ForeignKey('property.id'), primary_key=True)
     value = db.Column(db.String(100))
+    property = db.relationship('Property', lazy=True)
 
 class EntityPhoto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -43,6 +50,7 @@ class Ownership(db.Model):
     entity_id = db.Column(db.Integer, db.ForeignKey('entity.id'), primary_key=True)
     owner_id = db.Column(db.Integer, db.ForeignKey('owner.id'), primary_key=True)
     own = db.Column(db.Numeric(10,2), nullable=False)
+    owner = db.relationship('Owner', lazy=True)
 
 class Barcode(db.Model):
     entity_id = db.Column(db.Integer, db.ForeignKey('entity.id'))
@@ -56,57 +64,16 @@ app_header = 'Inventory'
 
 @app.route('/') 
 def index():
-    items = Entity.query.all()
-    for item in items:
-        item.barcodes = db.session.execute(db.select(Barcode.barcode).where(Barcode.entity_id==item.id)).all()
-        if item.parent:
-            if db.session.get(Entity, item.parent):
-                item.parent_name = db.session.get(Entity, item.parent).name
-            else:
-                item.parent_name = "Location does not exist"
-        item.child_count = Entity.query.where(Entity.parent==item.id).count()
-        item.ownerships = db.session.query(Ownership.own, Owner.name).join(Owner).filter(Ownership.entity_id == item.id).all()
-    return render_template('index.html', items=items, header=app_header)
+    return render_template('index.html', items=Entity.query.all(), header=app_header)
 
 @app.route('/details/<int:item_id>', methods=['GET'])
 def details(item_id):
-    # Get the item.
     item = db.get_or_404(Entity, item_id)
-    # Get the barcode.
-    barcodes = db.session.execute(db.select(Barcode.barcode).where(Barcode.entity_id==item_id)).all()
-    # Get the parent name.
-    parent_name = "Location not found"
-    if item.parent:
-        if db.session.get(Entity, item.parent):
-            parent_name = db.session.get(Entity, item.parent).name
-    # Get the ownerships.
-    ownership = db.session.query(Ownership.own, Owner.name).join(Owner).filter(Ownership.entity_id == item_id).all()
-    # Get the children.
-    children = Entity.query.where(Entity.parent==item_id).all()
-    for child in children:
-        ch_barcodes = db.session.execute(db.select(Barcode.barcode).where(Barcode.entity_id==child.id)).all()
-        child.barcodes = ch_barcodes if ch_barcodes else None
-        ch_ownerships = db.session.query(Ownership.own, Owner.name).join(Owner).filter(Ownership.entity_id == child.id).all()
-        child.ownerships = ch_ownerships if ch_ownerships else None
-        child.parent_name = item.name
     # Get the image. TODO: Handle multiple images.
-    image_data = db.session.execute(db.select(EntityPhoto.image).where(EntityPhoto.entity_id==item_id)).first()
-    if image_data:
-        image = base64.b64encode(image_data[0]).decode('utf-8')
-    else:
-        image = None
-    # Get the properties.
-    properties = db.session.query(Property.name, EntityProperties.value).join(EntityProperties).where(EntityProperties.entity_id == item_id).all()
-
-    return render_template('details.html', 
-                           detailedItem=item, 
-                           ownership=ownership, 
-                           barcodes=barcodes, 
-                           header=item.name, 
-                           items=children, 
-                           parent_name=parent_name, 
-                           image=image,
-                           properties=properties)
+    image = None
+    for image_data in item.photos:
+        image = base64.b64encode(image_data.image).decode('utf-8')
+    return render_template('details.html', detailedItem=item, header=item.name, items=item.children, image=image)
 
 @app.route('/add', methods=['POST'])
 def add():

@@ -35,34 +35,34 @@
         <h2>Item Details</h2>
         <p><strong>Name:</strong> {{ detailedItem.name }}</p>
         <p>
-            {% if barcodes|length > 1 %}
+            {% if detailedItem.barcodes|length > 1 %}
             <strong>Barcodes:</strong>
             <ul>
-                {% for barcode in barcodes %}
-                <li>{{ barcode[0] }}</li>
+                {% for barcode in detailedItem.barcodes %}
+                <li>{{ barcode.barcode }}</li>
                 {% endfor %}
             </ul>
-            {% elif barcodes|length == 1 %}
-            <strong>Barcode:</strong> {{ barcodes[0][0] }}
+            {% elif detailedItem.barcodes|length == 1 %}
+            <strong>Barcode:</strong> {{ detailedItem.barcodes[0].barcode }}
             {% else %}
             <strong>Barcode:</strong> No barcode found
             {% endif %}
         </p>
-        <p><strong>Location:</strong> {% if detailedItem.parent %}<a class="location" href="{{ detailedItem.parent }}">{{ parent_name }}</a>{% else %} not assigned {% endif %}</p>
+        <p><strong>Location:</strong> {% if detailedItem.parent %}<a class="location" href="{{ detailedItem.parent.id }}">{{ detailedItem.parent.name }}</a>{% else %} not assigned {% endif %}</p>
     </div>
     <div class="column">
         <h2>Ownership Details</h2>
-        {% for owner in ownership %}
-        <p><strong>Owner:</strong> {{ owner.name }}{% if owner.own != 100 %} - {{ owner.own }}%{% endif %}</p>
+        {% for ownership in detailedItem.ownerships %}
+        <p><strong>Owner:</strong> {{ ownership.owner.name }}{% if ownership.own != 100 %} - {{ ownership.own }}%{% endif %}</p>
         {% endfor %}
         {% if ownership|length == 0 %}
         <p>No ownership found</p>
         {% endif %}
         <h2>Extra properties:</h2>
-        {% for prop in properties %}
-        <p><strong>{{ prop[0] }}:</strong> {{ prop[1] }}</p>
+        {% for prop in detailedItem.properties %}
+        <p><strong>{{ prop.property.name }}:</strong> {{ prop.value }}</p>
         {% endfor %}
-        {% if properties|length == 0 %}
+        {% if detailedItem.properties|length == 0 %}
         <p>No extra properties found</p>
         {% endif %}
     </div>

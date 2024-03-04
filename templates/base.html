@@ -35,17 +35,17 @@
                     No barcode
                     {% endif %}
                 </td>
-                <td>{{ item.parent_name }}</td>
-                <td title="{% if item.ownerships|length > 1 %}{% for ownership in item.ownerships %}{{ ownership.name }} - {{ ownership.own }}%&#10;{% endfor %}{% endif %}">
+                <td>{{ item.parent.name }}</td>
+                <td title="{% if item.ownerships|length > 1 %}{% for ownership in item.ownerships %}{{ ownership.owner.name }} - {{ ownership.own }}%&#10;{% endfor %}{% endif %}">
                     {% if item.ownerships|length > 1 %}
                     Shared
                     {% elif item.ownerships|length == 1 %}
-                    {{ item.ownerships[0].name }}
+                    {{ item.ownerships[0].owner.name }}
                     {% else %}
                     No owner
                     {% endif %}
                 </td>
-                <td>{{ item.child_count }}</td>
+                <td>{{ item.children|length }}</td>
                 <td>{{ item.created }}</td>
                 <td>{{ item.modified }}</td>
                 <td>
