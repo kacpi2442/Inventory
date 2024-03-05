@@ -45,7 +45,7 @@ tr:nth-child(even) {
     background-color: #45a049;
 }
 
-button {
+table button {
     color: white;
     padding: 8px 16px;
     border: none;
@@ -108,4 +108,62 @@ a.location:hover{
 
 .upload-button:hover {
     background-color: #45a049;
+}
+
+.top-nav {
+    /* overflow: hidden; */
+    height: 5em;
+    display: flex;
+    width: auto;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+}
+
+.search-container {
+    display: flex;
+    flex: content;
+    justify-content: center;
+}
+
+div.search-container form{
+    width: 60vw;
+}
+
+.search-container input[type=text] {
+    padding: 10px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    width: 100%;
+    border-radius: 5px;
+}
+
+.buttons-container{
+    display: flex;
+    flex:2;
+
+}
+
+.buttons-container:last-child {
+    justify-content: flex-end;
+}
+
+.buttons-container a{
+    border: 2px solid #4f4f4f;
+    background-color: transparent;
+    text-decoration: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+
+    justify-content: center;
+    align-items: center;
+    display: flex;
+
+}
+
+.buttons-container a:nth-child(even){
+    border-left: 0px;
 }

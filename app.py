@@ -60,23 +60,17 @@ idx_entity_name = Index('idx_entity_name', Entity.name)
 idx_property_name = Index('idx_property_name', Property.name)
 idx_owner_name = Index('idx_owner_name', Owner.name)
 
-app_header = 'Inventory'
-
 @app.route('/') 
 def index():
-    return render_template('index.html', items=Entity.query.all(), header=app_header)
+    return render_template('index.html', items=Entity.query.all())
 
 @app.route('/details/<int:item_id>', methods=['GET'])
 def details(item_id):
     item = db.get_or_404(Entity, item_id)
-    # Get the image. TODO: Handle multiple images.
-    # image = None
-    # for image_data in item.photos:
-    #     image = base64.b64encode(image_data.image).decode('utf-8')
     photos_base64 = []
     for photo in item.photos:
         photos_base64.append(base64.b64encode(photo.image).decode('utf-8'))
-    return render_template('details.html', detailedItem=item, header=item.name, items=item.children, photos_base64=photos_base64)
+    return render_template('details.html', detailedItem=item, items=item.children, photos_base64=photos_base64)
 
 @app.route('/add', methods=['POST'])
 def add():

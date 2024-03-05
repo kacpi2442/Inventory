@@ -1,13 +1,58 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{{ header }}</title>
+    <title>
+        {% if detailedItem %}
+        {{ detailedItem.name }}
+        {% else %}
+        Inventory
+        {% endif %}
+    </title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}"" />
 </head>
 <body>
     <div class="container">
-        <h1>{{ header }}</h1>
+        <!-- <h1>{{ header }}</h1> -->
+        {% block topnav %}
+        <div class="top-nav">
+            <div class="buttons-container">
+                <a href="../" class="button">
+                    <svg width="20" height="20" viewBox="0 0 20 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path opacity="0.3" d="M8 17V11H12V17H17V9H20L10 0L0 9H3V17H8Z" fill="white"/>
+                    </svg>        
+                </a>
+                {% if detailedItem %}
+                {% if detailedItem.parent %}
+                <a href="{{ detailedItem.parent.id }}" title="{{ detailedItem.parent.name }}" class="button">
+                    <svg width="33" height="33" viewBox="34 34 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M42 57L51 48L60 57H42Z" fill="white" fill-opacity="0.3"/>
+                    </svg>                        
+                </a>
+                {% endif %}
+                {% endif %}
+            </div>
+            <div class="search-container">
+                <form action="/search" method="POST">
+                    <input type="text" name="search" placeholder="Search for any item...">
+                </form>
+            </div>
+            <div class="buttons-container">
+                <a href="/add" class="button">
+                    <svg width="20" height="20" viewBox="6 6 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M26.125 17.875H17.875V26.125H15.125V17.875H6.875V15.125H15.125V6.875H17.875V15.125H26.125V17.875Z" fill="white" fill-opacity="0.3"/>
+                    </svg>
+                </a>
+                {% if detailedItem %}
+                <a href="/locations" class="button">
+                    <svg width="20" height="20" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M0 15.0422V19H3.74948L14.8079 7.32718L11.0585 3.36939L0 15.0422ZM17.7075 4.26649C18.0975 3.85488 18.0975 3.18997 17.7075 2.77836L15.3679 0.308707C14.9779 -0.102902 14.348 -0.102902 13.9581 0.308707L12.1283 2.24011L15.8778 6.19789L17.7075 4.26649Z" fill="white" fill-opacity="0.3"/>
+                    </svg>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endblock %}
         {% block topContainer %}
         {% endblock %}
         {% block table %}
