@@ -70,10 +70,13 @@ def index():
 def details(item_id):
     item = db.get_or_404(Entity, item_id)
     # Get the image. TODO: Handle multiple images.
-    image = None
-    for image_data in item.photos:
-        image = base64.b64encode(image_data.image).decode('utf-8')
-    return render_template('details.html', detailedItem=item, header=item.name, items=item.children, image=image)
+    # image = None
+    # for image_data in item.photos:
+    #     image = base64.b64encode(image_data.image).decode('utf-8')
+    photos_base64 = []
+    for photo in item.photos:
+        photos_base64.append(base64.b64encode(photo.image).decode('utf-8'))
+    return render_template('details.html', detailedItem=item, header=item.name, items=item.children, photos_base64=photos_base64)
 
 @app.route('/add', methods=['POST'])
 def add():

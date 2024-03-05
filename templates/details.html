@@ -2,8 +2,8 @@
 {% block topContainer %}
 <div class="details-container">
     <div class="column itemImage">
-        {% if image %}
-        <img src="data:image/jpeg;base64, {{ image }}" alt="Image" />
+        {% if photos_base64[0] %}
+        <img src="data:image/jpeg;base64, {{ photos_base64[0] }}" alt="Image" />
         {% else %}
         <img src="{{ url_for('static', filename='no-image.jpg') }}" alt="No image" />
         {% endif %}
