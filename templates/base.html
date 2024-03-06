@@ -22,15 +22,13 @@
                         <path opacity="0.3" d="M8 17V11H12V17H17V9H20L10 0L0 9H3V17H8Z" fill="white"/>
                     </svg>        
                 </a>
-                {% if detailedItem %}
-                {% if detailedItem.parent %}
+                {% if detailedItem %}{% if detailedItem.parent %}
                 <a href="{{ detailedItem.parent.id }}" title="{{ detailedItem.parent.name }}" class="button">
                     <svg width="33" height="33" viewBox="34 34 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M42 57L51 48L60 57H42Z" fill="white" fill-opacity="0.3"/>
                     </svg>                        
                 </a>
-                {% endif %}
-                {% endif %}
+                {% endif %}{% endif %}
             </div>
             <div class="search-container">
                 <form action="/search" method="POST">
@@ -64,13 +62,11 @@
                 <th>Location</th> <!-- Parent, to be deleted from showing -->
                 <th>Ownership</th>
                 <th>Child count</th>
-                <th>Creation date</th>
-                <th>Modify date</th>
                 <th></th>
             </tr>
             {% for item in items %}
-            <tr>
-                <td>{{ item.name }}</td>
+            <tr title="Item ID: {{ item.id }}&#10;Created: {{ item.created }}&#10;Modified: {{ item.modified }}" >
+                <td><a href="/details/{{ item.id }}" class="rowlink"></a>{{ item.name }}</td>
                 <td title="{% if item.barcodes|length > 1 %}{% for barcode in item.barcodes %}{{ barcode.barcode }}, {% endfor %}{% endif %}">
                     {% if item.barcodes|length > 1 %}
                     {{ item.barcodes[0].barcode }} +
@@ -91,16 +87,19 @@
                     {% endif %}
                 </td>
                 <td>{{ item.children|length }}</td>
-                <td>{{ item.created }}</td>
-                <td>{{ item.modified }}</td>
-                <td class="buttons">
-                    <a href="/details/{{ item.id }}">
-                        <label class="button details-button">Details</label>
-                    </a>
-                    <form action="/delete/{{ item.id }}" method="POST" onsubmit="return confirm('Are you sure you want to delete &quot;{{ item.name }}&quot;?');">
-                        <input type="submit" value="Delete" id="delete-button" style="display: none;" />
-                        <label class="button delete-button" for="delete-button">Delete</label>
-                    </form>
+                <td>
+                    <div class="buttons">
+                        {% if item.children|length > 0 %}
+                        <form action="/delete/{{ item.id }}" method="POST" onsubmit="return confirm('Are you sure you want to delete &quot;{{ item.name }}&quot;?');">
+                            <input type="submit" value="Delete" id="delete-child-button" style="display: none;" />
+                            <label class="button delete-child-button" for="delete-child-button">Delete with children</label>
+                        </form>
+                        {% endif %}
+                        <form action="/delete/{{ item.id }}" method="POST" onsubmit="return confirm('Are you sure you want to delete &quot;{{ item.name }}&quot;?');">
+                            <input type="submit" value="Delete" id="delete-button" style="display: none;" />
+                            <label class="button delete-button" for="delete-button">Delete</label>
+                        </form>
+                    </div>
                 </td>
             </tr>
             {% endfor %}
