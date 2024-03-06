@@ -1,11 +1,12 @@
 body {
-    background-color: #2e2d2b;
+    background-color: #2e2e2e;
     color: white;
-    font-family: Arial, sans-serif;
+    font-family: 'Helvetica', 'Verdana', 'Roboto', sans-serif;
 }
 table {
     border-collapse: collapse;
-    width: 100%;
+    width: 85vw;
+    margin: 0 auto;
 }
 th, td {
     padding: 8px;
@@ -13,7 +14,7 @@ th, td {
     border-bottom: 1px solid white;
 }
 th {
-    background-color: #2e2d2b;
+    background-color: #2e2e2e;
     color: white;
 }
 tr:nth-child(even) {
@@ -45,46 +46,117 @@ tr:nth-child(even) {
     background-color: #45a049;
 }
 
-table button {
-    color: white;
-    padding: 8px 16px;
-    border: none;
-    cursor: pointer;
-    float: right;
+table td.buttons{
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+    flex-direction: row;
 }
 
-.delete-button {
+table td.buttons .button {
+    display: inline-block;
+    padding: 10px 20px;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 5px;
+    border: none;
+    background-color: #369bf4;
+    flex-grow: 1;
+    text-align: center;
+}
+
+table td.buttons .button:hover {
+    background-color: #247cc9;
+}
+
+table td.buttons .delete-button {
     background-color: #f44336;
 }
 
-.details-button {
-    background-color: #369bf4;
-}
-
-.delete-button:hover {
+table td.buttons .delete-button:hover {
     background-color: #d32f2f;
-}
-
-.details-button:hover {
-    background-color: #247cc9;
 }
 
 .details-container {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
+    width: 60vw;
+    margin: 0 auto 40px;
+    align-items: flex-start;
+    gap: 20px;
 }
 
-.details-container .column {
-    flex: 1;
-    padding: 10px;
+@media screen and (max-width: 1080px) {
+    .details-container {
+        flex-direction: column;
+        width: 80vw;
+        align-items: stretch;
+    }
+    
 }
 
-.itemImage{
-    padding: 20%;
+.details-container .details {
+    padding: 30px;
+    flex: 5;
+    background-color: #3f3f3f;
 }
 
-.itemImage img{
+.details-container .details h1, h2, h3, h4, h5, h6 {
+    margin-top: 0px;
+}
+
+.details-container .itemImage{
+    flex: 4;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    justify-content: stretch;
+}
+
+.details-container .itemImage img{
     width: 100%;
+    border-radius: 5px;
+}
+
+.details-container .itemImage .buttons{
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+    flex-direction: row;
+}
+
+.details-container .itemImage .buttons .button {
+    display: inline-block;
+    padding: 10px 20px;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 5px;
+    border: none;
+    background-color: #369bf4;
+    flex-grow: 1;
+    text-align: center;
+}
+
+.details-container .itemImage .buttons .button:hover {
+    background-color: #247cc9;
+}
+
+.details-container .itemImage .buttons .upload-button {
+    background-color: #4CAF50;
+    flex-grow: 2;
+}
+
+.details-container .itemImage .buttons .upload-button:hover {
+    background-color: #45a049;
+}
+
+.details-container .itemImage .buttons .delete-button {
+    background-color: #f44336;
+    flex-grow: 2;
+}
+
+.details-container .itemImage .buttons .delete-button:hover {
+    background-color: #d32f2f;
 }
 
 a.location{
@@ -93,21 +165,6 @@ a.location{
 
 a.location:hover{
     color: #369bf4;
-}
-
-.upload-button {
-    display: inline-block;
-    padding: 10px 20px;
-    background-color: #4CAF50;
-    color: #fff;
-    cursor: pointer;
-    border-radius: 5px;
-    border: none;
-    width: 100%;
-}
-
-.upload-button:hover {
-    background-color: #45a049;
 }
 
 .top-nav {
@@ -127,7 +184,7 @@ a.location:hover{
 }
 
 div.search-container form{
-    width: 60vw;
+    width: 50vw;
 }
 
 .search-container input[type=text] {

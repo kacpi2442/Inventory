@@ -93,12 +93,13 @@
                 <td>{{ item.children|length }}</td>
                 <td>{{ item.created }}</td>
                 <td>{{ item.modified }}</td>
-                <td>
-                    <a href="/details/{{ item.id }}" class="button details-button">
-                        <button class="button details-button" type="submit">Details</button>
+                <td class="buttons">
+                    <a href="/details/{{ item.id }}">
+                        <label class="button details-button">Details</label>
                     </a>
-                    <form action="/delete/{{ item.id }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete &quot;{{ item.name }}&quot;?');">
-                        <button class="button delete-button" type="submit">Delete</button>
+                    <form action="/delete/{{ item.id }}" method="POST" onsubmit="return confirm('Are you sure you want to delete &quot;{{ item.name }}&quot;?');">
+                        <input type="submit" value="Delete" id="delete-button" style="display: none;" />
+                        <label class="button delete-button" for="delete-button">Delete</label>
                     </form>
                 </td>
             </tr>

@@ -1,7 +1,41 @@
 {% extends 'base.html' %}
 {% block topContainer %}
 <div class="details-container">
-    <div class="column itemImage">
+    <div class="details">
+        <h2>{{ detailedItem.name }}</h2>
+        <p>
+            {% if detailedItem.barcodes|length > 1 %}
+            <strong>Barcodes:</strong>
+            <ul>
+                {% for barcode in detailedItem.barcodes %}
+                <li>{{ barcode.barcode }}</li>
+                {% endfor %}
+            </ul>
+            {% elif detailedItem.barcodes|length == 1 %}
+            <strong>Barcode:</strong> {{ detailedItem.barcodes[0].barcode }}
+            {% else %}
+            <strong>Barcode:</strong> No barcode found
+            {% endif %}
+        </p>
+        <p>Parent: {% if detailedItem.parent %}<a class="location" href="{{ detailedItem.parent.id }}">{{ detailedItem.parent.name }}</a>{% else %} not assigned {% endif %}</p>
+        <p>Children: {{ detailedItem.children|length }}</p>
+        {% for ownership in detailedItem.ownerships %}
+        <p>Owner: {{ ownership.owner.name }}{% if ownership.own != 100 %} - {{ ownership.own }}%{% endif %}</p>
+        {% endfor %}
+        {% if detailedItem.ownerships|length == 0 %}
+        <p>No ownership found</p>
+        {% endif %}
+        <h3>Extra properties</h3>
+        {% for prop in detailedItem.properties %}
+        <p>{{ prop.property.name }}: {{ prop.value }}</p>
+        {% endfor %}
+        {% if detailedItem.properties|length == 0 %}
+        <p>No extra properties found</p>
+        {% endif %}
+        <p>Creation date: {{ detailedItem.created }}</p>
+        <p>Modify date: {{ detailedItem.modified }}</p>
+    </div>
+    <div class="itemImage">
         {% if photos_base64[0] %}
         <img src="data:image/jpeg;base64, {{ photos_base64[0] }}" alt="Image" />
         {% else %}
@@ -29,43 +63,13 @@
 
             });
         </script>
-        <label for="photo-upload" class="upload-button">Upload Photo</label>
-    </div>
-    <div class="column">
-        <h2>Item Details</h2>
-        <p><strong>Name:</strong> {{ detailedItem.name }}</p>
-        <p>
-            {% if detailedItem.barcodes|length > 1 %}
-            <strong>Barcodes:</strong>
-            <ul>
-                {% for barcode in detailedItem.barcodes %}
-                <li>{{ barcode.barcode }}</li>
-                {% endfor %}
-            </ul>
-            {% elif detailedItem.barcodes|length == 1 %}
-            <strong>Barcode:</strong> {{ detailedItem.barcodes[0].barcode }}
-            {% else %}
-            <strong>Barcode:</strong> No barcode found
-            {% endif %}
-        </p>
-        <p><strong>Location:</strong> {% if detailedItem.parent %}<a class="location" href="{{ detailedItem.parent.id }}">{{ detailedItem.parent.name }}</a>{% else %} not assigned {% endif %}</p>
-    </div>
-    <div class="column">
-        <h2>Ownership Details</h2>
-        {% for ownership in detailedItem.ownerships %}
-        <p><strong>Owner:</strong> {{ ownership.owner.name }}{% if ownership.own != 100 %} - {{ ownership.own }}%{% endif %}</p>
-        {% endfor %}
-        {% if ownership|length == 0 %}
-        <p>No ownership found</p>
-        {% endif %}
-        <h2>Extra properties:</h2>
-        {% for prop in detailedItem.properties %}
-        <p><strong>{{ prop.property.name }}:</strong> {{ prop.value }}</p>
-        {% endfor %}
-        {% if detailedItem.properties|length == 0 %}
-        <p>No extra properties found</p>
-        {% endif %}
+        <div class="buttons">
+            <label class="next-button button">&lt</label>
+            <label for="photo-upload" class="upload-button button">Upload Photo</label>
+            <label class="delete-button button">Delete</label>
+            <label class="prev-button button">&gt</label>
+        </div>
     </div>
 </div>
-{% if items|length > 0 %}<h2>Entity content:</h2>{% endif %}
+<!-- {% if items|length > 0 %}<h2>Entity content:</h2>{% endif %} -->
 {% endblock %}
