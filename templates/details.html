@@ -2,6 +2,7 @@
 {% block topContainer %}
 <div class="details-container">
     <div class="details">
+        {% block details %}
         <h1>{{ detailedItem.name }}</h1>
         <p>
             {% if detailedItem.barcodes|length > 1 %}
@@ -34,6 +35,7 @@
         {% endif %}
         <p>Creation date: {{ detailedItem.created }}</p>
         <p>Modify date: {{ detailedItem.modified }}</p>
+        {% endblock %}
     </div>
     <div class="itemImage">
         {% if photos_base64[0] %}

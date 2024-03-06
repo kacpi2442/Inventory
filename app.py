@@ -72,6 +72,16 @@ def details(item_id):
         photos_base64.append(base64.b64encode(photo.image).decode('utf-8'))
     return render_template('details.html', detailedItem=item, items=item.children, photos_base64=photos_base64)
 
+@app.route('/edit/<int:item_id>', methods=['GET'])
+def edit(item_id):
+    item = db.get_or_404(Entity, item_id)
+    photos_base64 = []
+    for photo in item.photos:
+        photos_base64.append(base64.b64encode(photo.image).decode('utf-8'))
+    properties = Property.query.all()
+    owners = Owner.query.all()
+    return render_template('edit.html', detailedItem=item, items=item.children, photos_base64=photos_base64, editing=True, properties=properties, owners=owners)
+
 @app.route('/add', methods=['POST'])
 def add():
     name = request.form['name']
@@ -91,18 +101,53 @@ def add():
     return redirect(url_for('index'))
 
 
-@app.route('/update/<int:item_id>', methods=['POST'])
-def update(item_id):
+@app.route('/update', methods=['POST'])
+def update():
+    # {"id":"4","name":"Testowy","barcode":["2137"],"parent":"3","ownerships":[{"owner":"1","own":"70.00"},{"owner":"2","own":"20.00"},{"owner":"New owner","own":"10"}],"properties":[{"property":"1","value":"68 kg"},{"property":"2","value":"175 cm"},{"property":"new prop","value":"new val"}]}
+    data = json.loads(request.data)
+    item_id = data['id']
     item = Entity.query.get(item_id)
-    item.name = request.form['name']
-    item.parent = request.form['parent']
+    item.name = data['name']
+    # Try to update the parent.
+    try:
+        item.parent_id = data['parent']
+    except:
+        return "Error: Parent not found."
+    # Remove all the barcodes.
+    barcodes = Barcode.query.filter_by(entity_id=item_id).all()
+    for barcode in barcodes:
+        db.session.delete(barcode)
+    db.session.commit()
+    # Add new barcodes.
+    for barcode in data['barcode']:
+        barcode = Barcode(entity_id=item_id, barcode=barcode)
+        db.session.add(barcode)
+    # Remove all the ownerships.
+    ownerships = Ownership.query.filter_by(entity_id=item_id).all()
+    for ownership in ownerships:
+        db.session.delete(ownership)
+    db.session.commit()
+    # Add new ownerships.
+    for ownership in data['ownerships']:
+        owner_id = ownership['owner']
+        own = ownership['own']
+        ownership = Ownership(entity_id=item_id, owner_id=owner_id, own=own)
+        db.session.add(ownership)
+    # Remove all the properties.
+    properties = EntityProperties.query.filter_by(entity_id=item_id).all()
+    for property in properties:
+        db.session.delete(property)
+    db.session.commit()
+    # # Add new properties.
+    for property in data['properties']:
+        property_id = property['property']
+        value = property['value']
+        property = EntityProperties(entity_id=item_id, property_id=property_id, value=value)
+        db.session.add(property)
+    # Update the modified date.
     item.modified = datetime.now()
     db.session.commit()
-    # Update barcode.
-    barcode = Barcode.query.filter_by(entity_id=item_id).first()
-    barcode.barcode = request.form['barcode']
-    db.session.commit()
-    return redirect(url_for('index'))
+    return redirect(url_for('details', item_id=item_id))
 
 # Update one selected property.
 @app.route('/update_property/<int:item_id>', methods=['POST'])

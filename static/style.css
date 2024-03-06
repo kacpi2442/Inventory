@@ -248,3 +248,15 @@ div.search-container form{
 .buttons-container a:nth-child(even){
     border-left: 0px;
 }
+
+a.button-selected{
+    background-color: #369bf4; !important;
+}
+
+a.button-selected:hover{
+    background-color: #247cc9; !important;
+}
+
+a.button-selected svg{
+    fill: white;
+}

@@ -1,0 +1,66 @@
+{% extends 'details.html' %}
+{% block details %}
+<h1>Edit: {{ detailedItem.name }}</h1>
+<input type="hidden" id="id" name="id" value="{{ detailedItem.id }}">
+<p>Name</p>
+<input type="text" id="name" name="name" value="{{ detailedItem.name }}" required><br>
+<p>Barcodes</p>
+<input type="text" id="barcode" name="barcode" value="{% if detailedItem.barcodes|length > 0 %}{% for barcode in detailedItem.barcodes %}{{ barcode.barcode }}{% if not loop.last %},{% endif %}{% endfor %}{% endif %}"><br>
+<p>Owners</p>
+
+<div id="ownerships">
+{% for ownership in detailedItem.ownerships %}
+    <div>
+        <select id="owner-{{ loop.index }}" name="owner" class="owners" required>
+            {% for owner in owners %}
+            <option value="{{ owner.id }}" {% if owner.id == ownership.owner.id %} selected {% endif %}>{{ owner.name }}</option>
+            {% endfor %}
+            <option value="new">* New owner *</option>
+        </select>
+        <input type="number" id="owner-value-{{ loop.index }}" name="own" value="{{ ownership.own }}" required>
+        <button class="remove_property" value="{{ loop.index }}">-</button>
+        {% if loop.last %}
+        <button class="add_property">+</button>
+        {% endif %}
+    </div>
+{% endfor %}
+</div>
+<select id="ownerships-sample" class="owners" style="display: none;">
+    <option value="">No owner</option>
+    {% for owner in owners %}
+    <option value="{{ owner.id }}">{{ owner.name }}</option>
+    {% endfor %}
+    <option value="new">* New owner *</option>
+</select>
+
+<p>Parent ID</p>
+<input type="number" id="parent" name="parent" value="{{ detailedItem.parent.id }}">
+<p>Extra properties</p>
+<div id="properties">
+{% for prop in detailedItem.properties %}
+    <div>
+        <select id="property-{{ loop.index }}" name="property" class="property" required>
+            {% for property in properties %}
+            <option value="{{ property.id }}" {% if property.id == prop.property.id %} selected {% endif %}>{{ property.name }}</option>
+            {% endfor %}
+            <option value="new">* New property *</option>
+        </select>
+        <input type="text" id="property-value-{{ loop.index }}" name="value" value="{{ prop.value }}" required>
+        <button class="remove_property" value="{{ loop.index }}">-</button>
+        {% if loop.last %}
+        <button class="add_property">+</button>
+        {% endif %}
+    </div>
+{% endfor %}
+</div>
+<select id="properties-sample" class="property" style="display: none;">
+    <option value="">No property</option>
+    {% for property in properties %}
+    <option value="{{ property.id }}">{{ property.name }}</option>
+    {% endfor %}
+    <option value="new">* New property *</option>
+</select>
+<p id="error-message"></p>
+<button id="form-edit-submit">Submit</button>
+<script src="{{ url_for('static', filename='edit.js') }}"></script>
+{% endblock %}
