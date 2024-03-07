@@ -297,22 +297,29 @@ div.details button{
     text-align: center;
 }
 
-button.add_property, button#form-edit-submit{
+div.details button.add_property, button#form-edit-submit{
     background-color: #4CAF50;
 }
-button.add_property:hover, button#form-edit-submit:hover{
+div.details button.add_property:hover, button#form-edit-submit:hover{
     background-color: #45a049;
 }
-button.remove_property{
+div.details button.remove_property{
     background-color: #f44336;
 }
-button.remove_property:hover{
+div.details button.remove_property:hover{
     background-color: #d32f2f;
 }
-p.error-message{
+div.details p.error-message{
     color: #f44336;
     margin: 0;
     padding: 0;
     margin-bottom: 10px;
     text-align: center;
+}
+
+div.details button.delete-button{
+    background-color: #f44336;
+}
+div.details button.delete-button:hover{
+    background-color: #d32f2f;
 }

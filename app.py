@@ -192,9 +192,9 @@ def update():
         # Update the modified date.
         item.modified = datetime.now()
         db.session.commit()
+        return f"Item ID:{item.id} updated successfully.", 200
     except Exception as e:
         return str(e), 400
-    return "OK", 200
 
 # Add a new photo.
 @app.route('/add_photo/<int:item_id>', methods=['POST'])
@@ -209,9 +209,11 @@ def add_photo(item_id):
     return redirect(url_for('index'))
 
 
-@app.route('/delete/<int:item_id>', methods=['POST'])
+@app.route('/delete/<int:item_id>', methods=['POST', 'GET'])
 def delete(item_id):
     item = Entity.query.get(item_id)
+    if item.parent_id is not None:
+        parent_id = item.parent_id
     # Remove all the barcodes.
     barcodes = Barcode.query.filter_by(entity_id=item.id).all()
     for barcode in barcodes:
@@ -235,7 +237,8 @@ def delete(item_id):
     # Remove the item.
     db.session.delete(item)
     db.session.commit()
-
+    if parent_id is not None:
+        return redirect(url_for('details', item_id=parent_id))
     return redirect(url_for('index'))
 
 if __name__ == '__main__':

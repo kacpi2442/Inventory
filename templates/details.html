@@ -35,6 +35,7 @@
         {% endif %}
         <p>Creation date: {{ detailedItem.created }}</p>
         <p>Modify date: {{ detailedItem.modified }}</p>
+        <button class="button delete-button" onclick="window.location.href='/delete/{{ detailedItem.id }}'">Delete</button>
         {% endblock %}
     </div>
     <div class="itemImage">

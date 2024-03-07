@@ -43,7 +43,20 @@ document.getElementById('form-edit-submit').addEventListener('click', function(e
         if (xhr.readyState == 4 && xhr.status == 200) {
             console.log(xhr.responseText);
             document.getElementById('error-message').innerHTML = xhr.responseText;
-            // window.location.href = '/list';
+            id = document.getElementById('id').value
+            if (!isNaN(parseInt(id))) {
+                window.location.href = '/details/' + id;
+            } else {
+                // Clear the form
+                document.getElementById('id').value = '';
+                document.getElementById('name').value = '';
+                document.getElementById('barcode').value = '';
+                // document.getElementById('parent').value = '';
+                // document.getElementById('ownerships').innerHTML = '';
+                document.getElementById('properties').innerHTML = '';
+                existingButtons('properties');
+                // existingButtons('ownerships');
+            }
         }else if (xhr.readyState == 4 && xhr.status != 200) {
             console.log(xhr.responseText);
             document.getElementById('error-message').innerHTML = xhr.responseText;
