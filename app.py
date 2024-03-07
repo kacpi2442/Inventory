@@ -72,6 +72,20 @@ def details(item_id):
         photos_base64.append(base64.b64encode(photo.image).decode('utf-8'))
     return render_template('details.html', detailedItem=item, items=item.children, photos_base64=photos_base64)
 
+# Search for items.
+@app.route('/search', methods=['POST'])
+def search():
+    search = request.form['search']
+    if search.startswith('@ '):
+        deep_search = search[2:]
+        items = Entity.query.filter((Entity.name.contains(deep_search)) |
+                                    (Entity.barcodes.any(Barcode.barcode == deep_search)) |
+                                    (Entity.properties.any(EntityProperties.value.contains(deep_search)))).all()
+    else:
+        items = Entity.query.filter((Entity.name.contains(search)) | 
+                                    (Entity.barcodes.any(Barcode.barcode == search))).all()
+    return render_template('base.html', items=items, search=search, show_parent=True)
+
 @app.route('/edit/<int:item_id>', methods=['GET'])
 def edit(item_id):
     item = db.get_or_404(Entity, item_id)

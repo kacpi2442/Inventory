@@ -32,7 +32,8 @@
             </div>
             <div class="search-container">
                 <form action="/search" method="POST">
-                    <input type="text" name="search" placeholder="Search for any item...">
+                    <input type="text" name="search" placeholder="Search for any item..." value="{% if search %}{{ search }}{% endif %}"
+                    autocomplete="off" onfocus="this.select();" {% if not adding and not editing %}autofocus{% endif %} />
                 </form>
             </div>
             <div class="buttons-container">
@@ -67,9 +68,11 @@
             <tr>
                 <th>Name</th>
                 <th>Barcode</th>
+                {% if show_parent %}
                 <th>Location</th> <!-- Parent, to be deleted from showing -->
+                {% endif %}
                 <th>Ownership</th>
-                <th>Child count</th>
+                <th>Children</th>
                 <th></th>
             </tr>
             {% for item in items %}
@@ -84,7 +87,9 @@
                     No barcode
                     {% endif %}
                 </td>
+                {% if show_parent %}
                 <td>{{ item.parent.name }}</td>
+                {% endif %}
                 <td title="{% if item.ownerships|length > 1 %}{% for ownership in item.ownerships %}{{ ownership.owner.name }} - {{ ownership.own }}%&#10;{% endfor %}{% endif %}">
                     {% if item.ownerships|length > 1 %}
                     Shared
