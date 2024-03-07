@@ -1,15 +1,21 @@
 {% extends 'details.html' %}
 {% block details %}
+{% if detailedItem %}
 <h1>Edit: {{ detailedItem.name }}</h1>
 <input type="hidden" id="id" name="id" value="{{ detailedItem.id }}">
+{% else %}
+<h1>Add new item</h1>
+<input type="hidden" id="id" name="id" value="">
+{% endif %}
 <p>Name</p>
-<input type="text" id="name" name="name" value="{{ detailedItem.name }}" required><br>
+<input type="text" id="name" name="name" value="{% if detailedItem %}{{ detailedItem.name }}{% endif %}" required>
 <p>Barcodes</p>
-<input type="text" id="barcode" name="barcode" value="{% if detailedItem.barcodes|length > 0 %}{% for barcode in detailedItem.barcodes %}{{ barcode.barcode }}{% if not loop.last %},{% endif %}{% endfor %}{% endif %}"><br>
+<input type="text" id="barcode" name="barcode" value="{% if detailedItem %}{% if detailedItem.barcodes|length > 0 %}{% for barcode in detailedItem.barcodes %}{{ barcode.barcode }}{% if not loop.last %},{% endif %}{% endfor %}{% endif %}{% endif %}">
+<p>Parent ID</p>
+<input type="number" id="parent" name="parent" value="{% if detailedItem %}{{ detailedItem.parent.id }}{% endif %}">
 <p>Owners</p>
-
 <div id="ownerships">
-{% for ownership in detailedItem.ownerships %}
+    {% if detailedItem %}{% for ownership in detailedItem.ownerships %}
     <div>
         <select id="owner-{{ loop.index }}" name="owner" class="owners" required>
             {% for owner in owners %}
@@ -23,7 +29,7 @@
         <button class="add_property">+</button>
         {% endif %}
     </div>
-{% endfor %}
+    {% endfor %}{% endif %}
 </div>
 <select id="ownerships-sample" class="owners" style="display: none;">
     <option value="">No owner</option>
@@ -33,11 +39,9 @@
     <option value="new">* New owner *</option>
 </select>
 
-<p>Parent ID</p>
-<input type="number" id="parent" name="parent" value="{{ detailedItem.parent.id }}">
 <p>Extra properties</p>
 <div id="properties">
-{% for prop in detailedItem.properties %}
+    {% if detailedItem %}{% for prop in detailedItem.properties %}
     <div>
         <select id="property-{{ loop.index }}" name="property" class="property" required>
             {% for property in properties %}
@@ -51,7 +55,7 @@
         <button class="add_property">+</button>
         {% endif %}
     </div>
-{% endfor %}
+    {% endfor %}{% endif %}
 </div>
 <select id="properties-sample" class="property" style="display: none;">
     <option value="">No property</option>

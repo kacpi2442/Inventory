@@ -6,7 +6,7 @@ body {
 table {
     border-collapse: collapse;
     width: 85vw;
-    margin: 0 auto;
+    margin: 20px auto;
 }
 .rowlink::before {
     content: "";
@@ -37,28 +37,6 @@ tr:nth-child(even) {
 }
 .container {
     margin: 20px;
-}
-.form-container {
-    margin-bottom: 20px;
-}
-.form-container input[type=text], .form-container input[type=date], .form-container input[type=number] {
-    width: 100%;
-    padding: 12px 20px;
-    margin: 8px 0;
-    display: inline-block;
-    border: 1px solid #ccc;
-    box-sizing: border-box;
-}
-.form-container input[type=submit] {
-    background-color: #4CAF50;
-    color: white;
-    padding: 12px 20px;
-    border: none;
-    cursor: pointer;
-    width: 100%;
-}
-.form-container input[type=submit]:hover {
-    background-color: #45a049;
 }
 
 table .buttons{

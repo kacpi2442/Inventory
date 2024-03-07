@@ -38,11 +38,12 @@
         {% endblock %}
     </div>
     <div class="itemImage">
-        {% if photos_base64[0] %}
+        {% if photos_base64 and photos_base64[0] %}
         <img src="data:image/jpeg;base64, {{ photos_base64[0] }}" alt="Image" />
         {% else %}
         <img src="{{ url_for('static', filename='no-image.jpg') }}" alt="No image" />
         {% endif %}
+        {% if not adding %}
         <input type="file" name="photo" id="photo-upload" accept="image/jpeg" style="display: none;">
         <script>
             document.getElementById('photo-upload').addEventListener('change', function(e) {
@@ -71,6 +72,7 @@
             <label class="delete-button button">Delete</label>
             <label class="prev-button button">&gt</label>
         </div>
+        {% endif %}
     </div>
 </div>
 <!-- {% if items|length > 0 %}<h2>Entity content:</h2>{% endif %} -->

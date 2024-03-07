@@ -62,7 +62,7 @@ idx_owner_name = Index('idx_owner_name', Owner.name)
 
 @app.route('/') 
 def index():
-    return render_template('index.html', items=Entity.query.all())
+    return render_template('base.html', items=Entity.query.filter_by(parent_id=None).all()) # Todo: Order by number of children.
 
 @app.route('/details/<int:item_id>', methods=['GET'])
 def details(item_id):
@@ -82,90 +82,91 @@ def edit(item_id):
     owners = Owner.query.all()
     return render_template('edit.html', detailedItem=item, items=item.children, photos_base64=photos_base64, editing=True, properties=properties, owners=owners)
 
-@app.route('/add', methods=['POST'])
+@app.route('/add', methods=['GET'])
 def add():
-    name = request.form['name']
-    parent = request.form['parent']
-    # Current timestamp as for created and modified.
-    modified = created = datetime.now()
-    entity = Entity(name=name, parent=parent, created=created, modified=modified)
-    # Get the last inserted id.
-    db.session.add(entity)
-    db.session.commit()
-    entity_id = entity.id
-    # Add barcode.
-    barcode = request.form['barcode']
-    barcode = Barcode(entity_id=entity_id, barcode=barcode)
-    db.session.add(barcode)
-    db.session.commit()
-    return redirect(url_for('index'))
+    properties = Property.query.all()
+    owners = Owner.query.all()
+    return render_template('edit.html', adding=True, properties=properties, owners=owners)
 
 
 @app.route('/update', methods=['POST'])
 def update():
     # {"id":"4","name":"Testowy","barcode":["2137"],"parent":"3","ownerships":[{"owner":"1","own":"70.00"},{"owner":"2","own":"20.00"},{"owner":"New owner","own":"10"}],"properties":[{"property":"1","value":"68 kg"},{"property":"2","value":"175 cm"},{"property":"new prop","value":"new val"}]}
-    data = json.loads(request.data)
-    item_id = data['id']
-    item = Entity.query.get(item_id)
-    item.name = data['name']
-    # Try to update the parent.
     try:
-        item.parent_id = data['parent']
-    except:
-        return "Error: Parent not found."
-    # Remove all the barcodes.
-    barcodes = Barcode.query.filter_by(entity_id=item_id).all()
-    for barcode in barcodes:
-        db.session.delete(barcode)
-    db.session.commit()
-    # Add new barcodes.
-    for barcode in data['barcode']:
-        barcode = Barcode(entity_id=item_id, barcode=barcode)
-        db.session.add(barcode)
-    # Remove all the ownerships.
-    ownerships = Ownership.query.filter_by(entity_id=item_id).all()
-    for ownership in ownerships:
-        db.session.delete(ownership)
-    db.session.commit()
-    # Add new ownerships.
-    for ownership in data['ownerships']:
-        owner_id = ownership['owner']
-        own = ownership['own']
-        ownership = Ownership(entity_id=item_id, owner_id=owner_id, own=own)
-        db.session.add(ownership)
-    # Remove all the properties.
-    properties = EntityProperties.query.filter_by(entity_id=item_id).all()
-    for property in properties:
-        db.session.delete(property)
-    db.session.commit()
-    # # Add new properties.
-    for property in data['properties']:
-        property_id = property['property']
-        value = property['value']
-        property = EntityProperties(entity_id=item_id, property_id=property_id, value=value)
-        db.session.add(property)
-    # Update the modified date.
-    item.modified = datetime.now()
-    db.session.commit()
-    return redirect(url_for('details', item_id=item_id))
-
-# Update one selected property.
-@app.route('/update_property/<int:item_id>', methods=['POST'])
-def update_property(item_id):
-    item = Entity.query.get(item_id)
-    property_id = request.form['property']
-    value = request.form['value']
-    # Check if the property already exists.
-    existing = db.session.query(EntityProperties).filter(EntityProperties.entity_id==item_id, EntityProperties.property_id==property_id).first()
-    if existing:
-        existing.value = value
-    else:
-        new_property = EntityProperties(entity_id=item_id, property_id=property_id, value=value)
-        db.session.add(new_property)
-    # Update the modified date.
-    item.modified = datetime.now()
-    db.session.commit()
-    return redirect(url_for('index'))
+        data = json.loads(request.data)
+        item_id = data['id']
+        if item_id == '':
+            # Create a new item.
+            item = Entity(name=data['name'], created=datetime.now(), modified=datetime.now())
+            db.session.add(item)
+            db.session.commit()
+            item = db.get_or_404(Entity, item.id)
+        else:
+            item = db.get_or_404(Entity, item_id)
+        item.name = data['name']
+        # Try to update the parent.
+        if data['parent'] == '':
+            item.parent_id = None
+        else:
+            item.parent_id = data['parent']
+        # Remove all the barcodes.
+        barcodes = Barcode.query.filter_by(entity_id=item.id).all()
+        for barcode in barcodes:
+            db.session.delete(barcode)
+        db.session.commit()
+        # Add new barcodes
+        if data['barcode'] != ['']:
+            for barcode in data['barcode']:
+                barcode = Barcode(entity_id=item.id, barcode=barcode)
+                db.session.add(barcode)
+        # Remove all the ownerships.
+        ownerships = Ownership.query.filter_by(entity_id=item.id).all()
+        for ownership in ownerships:
+            db.session.delete(ownership)
+        db.session.commit()
+        # Add new ownerships.
+        if data['ownerships'] != ['']:
+            for ownership in data['ownerships']:
+                if ownership['owner'] == '':
+                    continue
+                # if owner not a number, then it's a new owner.
+                if not ownership['owner'].isdigit():
+                    owner = Owner(name=ownership['owner'])
+                    db.session.add(owner)
+                    db.session.commit()
+                    owner_id = owner.id
+                else:
+                    owner_id = ownership['owner']
+                own = ownership['own']
+                ownership = Ownership(entity_id=item.id, owner_id=owner_id, own=own)
+                db.session.add(ownership)
+        # Remove all the properties.
+        properties = EntityProperties.query.filter_by(entity_id=item.id).all()
+        for property in properties:
+            db.session.delete(property)
+        db.session.commit()
+        # # Add new properties.
+        if data['properties'] != ['']:
+            for property in data['properties']:
+                if property['property'] == '':
+                    continue
+                # if property not a number, then it's a new property.
+                if not property['property'].isdigit():
+                    new_property = Property(name=property['property'])
+                    db.session.add(new_property)
+                    db.session.commit()
+                    property_id = new_property.id
+                else:
+                    property_id = property['property']
+                value = property['value']
+                property = EntityProperties(entity_id=item.id, property_id=property_id, value=value)
+                db.session.add(property)
+        # Update the modified date.
+        item.modified = datetime.now()
+        db.session.commit()
+    except Exception as e:
+        return str(e), 400
+    return "OK", 200
 
 # Add a new photo.
 @app.route('/add_photo/<int:item_id>', methods=['POST'])
@@ -180,10 +181,30 @@ def add_photo(item_id):
     return redirect(url_for('index'))
 
 
-
 @app.route('/delete/<int:item_id>', methods=['POST'])
 def delete(item_id):
     item = Entity.query.get(item_id)
+    # Remove all the barcodes.
+    barcodes = Barcode.query.filter_by(entity_id=item.id).all()
+    for barcode in barcodes:
+        db.session.delete(barcode)
+    db.session.commit()
+    # Remove all the ownerships.
+    ownerships = Ownership.query.filter_by(entity_id=item.id).all()
+    for ownership in ownerships:
+        db.session.delete(ownership)
+    db.session.commit()
+    # Remove all the properties.
+    properties = EntityProperties.query.filter_by(entity_id=item.id).all()
+    for property in properties:
+        db.session.delete(property)
+    db.session.commit()
+    # Remove all the photos.
+    photos = EntityPhoto.query.filter_by(entity_id=item.id).all()
+    for photo in photos:
+        db.session.delete(photo)
+    db.session.commit()
+    # Remove the item.
     db.session.delete(item)
     db.session.commit()
 

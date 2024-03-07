@@ -41,6 +41,7 @@ document.getElementById('form-edit-submit').addEventListener('click', function(e
     xhr.onreadystatechange = function() {
         if (xhr.readyState == 4 && xhr.status == 200) {
             console.log(xhr.responseText);
+            document.getElementById('error-message').innerHTML = xhr.responseText;
             // window.location.href = '/list';
         }else if (xhr.readyState == 4 && xhr.status != 200) {
             console.log(xhr.responseText);

@@ -36,7 +36,11 @@
                 </form>
             </div>
             <div class="buttons-container">
+                {% if adding %}
+                <a href="/" class="button button-selected">
+                {% else %}
                 <a href="/add" class="button">
+                {% endif %}
                     <svg width="20" height="20" viewBox="6 6 22 22" fill="#4f4f4f" xmlns="http://www.w3.org/2000/svg">
                         <path d="M26.125 17.875H17.875V26.125H15.125V17.875H6.875V15.125H15.125V6.875H17.875V15.125H26.125V17.875Z"/>
                     </svg>
@@ -95,13 +99,11 @@
                     <div class="buttons">
                         {% if item.children|length > 0 %}
                         <form action="/delete/{{ item.id }}" method="POST" onsubmit="return confirm('Are you sure you want to delete &quot;{{ item.name }}&quot;?');">
-                            <input type="submit" value="Delete" id="delete-child-button" style="display: none;" />
-                            <label class="button delete-child-button" for="delete-child-button">Delete with children</label>
+                            <input type="submit" class="button delete-child-button" value="Delete with children" />
                         </form>
                         {% endif %}
                         <form action="/delete/{{ item.id }}" method="POST" onsubmit="return confirm('Are you sure you want to delete &quot;{{ item.name }}&quot;?');">
-                            <input type="submit" value="Delete" id="delete-button" style="display: none;" />
-                            <label class="button delete-button" for="delete-button">Delete</label>
+                            <input type="submit" class="button delete-button" value="Delete" />
                         </form>
                     </div>
                 </td>
