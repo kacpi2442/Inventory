@@ -238,3 +238,78 @@ a.button-selected:hover{
 a.button-selected svg{
     fill: white;
 }
+
+/* Edit form */
+
+div#ownerships :not(:last-child) .add_property,
+div#properties :not(:last-child) .add_property,
+div#ownerships :first-child .remove_property,
+div#properties :first-child .remove_property{
+    display: none;
+    /* visibility: hidden; */
+}
+
+div.details input, div.details select, div.details textarea{
+    width: 100%;
+    padding: 10px;
+    /* margin-bottom: 8px; */
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    border-radius: 5px;
+}
+div.details input[type=number] {
+    width: 12% !important;
+}
+div.details textarea {
+    flex-basis: 100%
+}
+
+div.details div#ownerships div, div.details div#properties div{
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+div.details div#properties div input,
+div.details div#properties div select,
+div.details div#ownerships div input,
+div.details div#ownerships div select{
+    width: 25%;
+}
+
+div.details div#ownerships div,
+div.details div#properties div{
+    margin: 10px 0;
+}
+
+div.details button{
+    padding: 10px;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 5px;
+    border: none;
+    text-align: center;
+}
+
+button.add_property, button#form-edit-submit{
+    background-color: #4CAF50;
+}
+button.add_property:hover, button#form-edit-submit:hover{
+    background-color: #45a049;
+}
+button.remove_property{
+    background-color: #f44336;
+}
+button.remove_property:hover{
+    background-color: #d32f2f;
+}
+p.error-message{
+    color: #f44336;
+    margin: 0;
+    padding: 0;
+    margin-bottom: 10px;
+    text-align: center;
+}

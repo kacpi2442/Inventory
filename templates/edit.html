@@ -18,6 +18,7 @@
     {% if detailedItem %}{% for ownership in detailedItem.ownerships %}
     <div>
         <select id="owner-{{ loop.index }}" name="owner" class="owners" required>
+            <option value="">No owner</option>
             {% for owner in owners %}
             <option value="{{ owner.id }}" {% if owner.id == ownership.owner.id %} selected {% endif %}>{{ owner.name }}</option>
             {% endfor %}
@@ -25,9 +26,7 @@
         </select>
         <input type="number" id="owner-value-{{ loop.index }}" name="own" value="{{ ownership.own }}" required>
         <button class="remove_property" value="{{ loop.index }}">-</button>
-        {% if loop.last %}
         <button class="add_property">+</button>
-        {% endif %}
     </div>
     {% endfor %}{% endif %}
 </div>
@@ -44,15 +43,14 @@
     {% if detailedItem %}{% for prop in detailedItem.properties %}
     <div>
         <select id="property-{{ loop.index }}" name="property" class="property" required>
+            <option value="">No property</option>
             {% for property in properties %}
             <option value="{{ property.id }}" {% if property.id == prop.property.id %} selected {% endif %}>{{ property.name }}</option>
             {% endfor %}
             <option value="new">* New property *</option>
         </select>
         <button class="remove_property" value="{{ loop.index }}">-</button>
-        {% if loop.last %}
         <button class="add_property">+</button>
-        {% endif %}
         <br>
         <!-- <input type="text" id="property-value-{{ loop.index }}" name="value" value="{{ prop.value }}" required> -->
         <textarea id="property-value-{{ loop.index }}" name="value" required>{{ prop.value }}</textarea>

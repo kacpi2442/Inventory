@@ -56,44 +56,15 @@ function removeProperty(event, id) {
     event.preventDefault();
     var propertyElement = event.target.parentNode;
     propertyElement.parentNode.removeChild(propertyElement);
-
-    // Add the add button back to the last property
-    var newProperty = document.createElement('button');
-    newProperty.innerHTML = '+';
-    newProperty.className = 'add_property';
-    newProperty.addEventListener('click', ev => addProperty(ev, id));
-
-    propertyElement = document.getElementById(id).lastElementChild;
-    if (propertyElement.getElementsByClassName('add_property').length == 0)
-        if (propertyElement)
-            propertyElement.appendChild(newProperty);
-        else
-            document.getElementById(id).appendChild(newProperty);
 }
 
 // Function to add a new property
 function addProperty(event, id) {
     event.preventDefault();
-
-    // Remove the first add button
-    var addButtons = document.querySelectorAll('div#'+id+' .add_property');
-    // addButtons[0].style.display = 'none';
-    if (addButtons.length > 0) addButtons[0].parentNode.removeChild(addButtons[0]);
-
     var propertiesContainer = document.getElementById(id);
     var newIndex = propertiesContainer.children.length + 1;
 
     var newProperty = document.createElement('div');
-    
-    // var className = id == 'properties' ? 'property' : 'owners';
-    // var selectId = id == 'properties' ? 'property' : 'owner';
-    // newProperty.innerHTML = `
-    //     <select id="${selectId}-${newIndex}" name="${className}" class="${className}" required>
-    //     </select>
-    //     <input type="text" id="${selectId}-value-${newIndex}" name="value" required>
-    //     <button class="remove_property" value="${newIndex}">-</button>
-    //     <button class="add_property">+</button>
-    // `;
 
     if (id == 'properties') {
         newProperty.innerHTML = `
@@ -108,15 +79,14 @@ function addProperty(event, id) {
         newProperty.innerHTML = `
             <select id="owner-${newIndex}" name="owner" class="owners" required>
             </select>
-            <input type="text" id="owner-value-${newIndex}" name="value" required>
+            <input type="number" id="owner-value-${newIndex}" name="own" value="100" required>
             <button class="remove_property" value="${newIndex}">-</button>
             <button class="add_property">+</button>
             `;
     }
 
-    // newProperty.getElementsByTagName('select')[0].innerHTML = document.getElementById('property-1').innerHTML;
+    // Add select options from the hidden sample provided in the page
     newProperty.getElementsByTagName('select')[0].innerHTML = document.getElementById(id+'-sample').innerHTML;
-    
     propertiesContainer.appendChild(newProperty);
 
     // Add event listeners to the new buttons
