@@ -2,14 +2,16 @@ import logging
 import asyncio
 from pathlib import Path
 import tempfile
+import io
 
 from threading import Thread
 from telegram import ForceReply, Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 from inventory_flask import Entity
 from sqlalchemy.orm import Session
-from pyzxing import BarCodeReader
+import zxingcpp
 import os
+from PIL import Image
 
 botToken = os.environ["BOT_TOKEN"]
 
@@ -23,17 +25,21 @@ class TelegramInventoryBot():
         self.application.add_handler(CommandHandler("start", self.start))
         self.application.add_handler(MessageHandler(filters.PHOTO & ~filters.COMMAND, self.photo_received))
 
-        self.barcodeReader = BarCodeReader()
-
     async def photo_received(self, update: Update, context):
         if (update.message.photo):
             print(update.message.photo)
             photoFileId = update.message.photo[-1].file_id
             photoFile = await self.application.bot.get_file(photoFileId)
             
-            res = await photoFile.download_to_drive(custom_path=Path(self.tmpDir.name, photoFileId))
-            print(self.barcodeReader.decode(res))
-        pass
+            res = await photoFile.download_as_bytearray()
+            barcode = Image.open(io.BytesIO(res))
+            for code in zxingcpp.read_barcodes(barcode):
+                print()
+                print('Found barcode:'
+		            f'\n Text:    "{code.text}"'
+		            f'\n Format:   {code.format}'
+		            f'\n Content:  {code.content_type}'
+		            f'\n Position: {code.position}')
 
     async def run_bot(self):
         await self.application.initialize()
