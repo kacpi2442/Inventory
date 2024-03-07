@@ -49,11 +49,13 @@
             {% endfor %}
             <option value="new">* New property *</option>
         </select>
-        <input type="text" id="property-value-{{ loop.index }}" name="value" value="{{ prop.value }}" required>
         <button class="remove_property" value="{{ loop.index }}">-</button>
         {% if loop.last %}
         <button class="add_property">+</button>
         {% endif %}
+        <br>
+        <!-- <input type="text" id="property-value-{{ loop.index }}" name="value" value="{{ prop.value }}" required> -->
+        <textarea id="property-value-{{ loop.index }}" name="value" required>{{ prop.value }}</textarea>
     </div>
     {% endfor %}{% endif %}
 </div>

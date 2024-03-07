@@ -85,15 +85,35 @@ function addProperty(event, id) {
 
     var newProperty = document.createElement('div');
     
-    var className = id == 'properties' ? 'property' : 'owners';
-    var selectId = id == 'properties' ? 'property' : 'owner';
-    newProperty.innerHTML = `
-        <select id="${selectId}-${newIndex}" name="${className}" class="${className}" required>
-        </select>
-        <input type="text" id="${selectId}-value-${newIndex}" name="value" required>
-        <button class="remove_property" value="${newIndex}">-</button>
-        <button class="add_property">+</button>
-    `;
+    // var className = id == 'properties' ? 'property' : 'owners';
+    // var selectId = id == 'properties' ? 'property' : 'owner';
+    // newProperty.innerHTML = `
+    //     <select id="${selectId}-${newIndex}" name="${className}" class="${className}" required>
+    //     </select>
+    //     <input type="text" id="${selectId}-value-${newIndex}" name="value" required>
+    //     <button class="remove_property" value="${newIndex}">-</button>
+    //     <button class="add_property">+</button>
+    // `;
+
+    if (id == 'properties') {
+        newProperty.innerHTML = `
+            <select id="property-${newIndex}" name="property" class="property" required>
+            </select>
+            <button class="remove_property" value="${newIndex}">-</button>
+            <button class="add_property">+</button>
+            <br>
+            <textarea id="property-value-${newIndex}" name="value" required></textarea>
+        `;
+    }else {
+        newProperty.innerHTML = `
+            <select id="owner-${newIndex}" name="owner" class="owners" required>
+            </select>
+            <input type="text" id="owner-value-${newIndex}" name="value" required>
+            <button class="remove_property" value="${newIndex}">-</button>
+            <button class="add_property">+</button>
+            `;
+    }
+
     // newProperty.getElementsByTagName('select')[0].innerHTML = document.getElementById('property-1').innerHTML;
     newProperty.getElementsByTagName('select')[0].innerHTML = document.getElementById(id+'-sample').innerHTML;
     
