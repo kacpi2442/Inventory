@@ -263,6 +263,9 @@ div.details input[type=number] {
 div.details textarea {
     flex-basis: 100%
 }
+div.details input[type=checkbox] {
+    width: unset;
+}
 
 div.details div#ownerships div, div.details div#properties div{
     display: flex;

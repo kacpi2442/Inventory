@@ -5,7 +5,8 @@ function packValuesToJson() {
         barcode: document.getElementById('barcode').value.split(','),
         parent: document.getElementById('parent').value,
         ownerships: [],
-        properties: []
+        properties: [],
+        inherit: document.getElementById('inheritance') ? document.getElementById('inheritance').checked : false
     };
 
     var ownerships = document.getElementById('ownerships').getElementsByClassName('owners');
@@ -107,9 +108,8 @@ function existingButtons(id) {
         addButtons[i].addEventListener('click',(ev) => addProperty(ev, id));
     }
 
-    console.log(id)
     if (document.getElementById(id).children.length == 0) {
-        console.log(document.getElementById(id))
+        // Add a new property if there are no properties at the start
         addProperty({preventDefault: () => {}}, id);
     }
 }

@@ -30,6 +30,10 @@
     </div>
     {% endfor %}{% endif %}
 </div>
+{% if detailedItem %}{% if detailedItem.children|length > 0 %}
+<input type="checkbox" id="inheritance" name="inheritance">
+<label for="inheritance">Inherit ownership to children</label>
+{% endif %}{% endif %}
 <select id="ownerships-sample" class="owners" style="display: none;">
     <option value="">No owner</option>
     {% for owner in owners %}

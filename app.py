@@ -138,6 +138,14 @@ def update():
         for ownership in ownerships:
             db.session.delete(ownership)
         db.session.commit()
+        
+        if data['inherit']:
+            # Remove all ownerships from children.
+            for child in item.children:
+                ownerships = Ownership.query.filter_by(entity_id=child.id).all()
+                for ownership in ownerships:
+                    db.session.delete(ownership)
+                db.session.commit()
         # Add new ownerships.
         if data['ownerships'] != ['']:
             for ownership in data['ownerships']:
@@ -154,6 +162,12 @@ def update():
                 own = ownership['own']
                 ownership = Ownership(entity_id=item.id, owner_id=owner_id, own=own)
                 db.session.add(ownership)
+                if data['inherit']:
+                    # Add the same ownership to children.
+                    for child in item.children:
+                        ownership = Ownership(entity_id=child.id, owner_id=owner_id, own=own)
+                        db.session.add(ownership)
+            
         # Remove all the properties.
         properties = EntityProperties.query.filter_by(entity_id=item.id).all()
         for property in properties:
