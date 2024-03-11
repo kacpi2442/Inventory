@@ -228,11 +228,11 @@ div.search-container form{
 }
 
 a.button-selected{
-    background-color: #369bf4; !important;
+    background-color: #369bf4 !important;
 }
 
 a.button-selected:hover{
-    background-color: #247cc9; !important;
+    background-color: #247cc9 !important;
 }
 
 a.button-selected svg{
