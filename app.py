@@ -10,4 +10,4 @@ if __name__ == '__main__':
     with app.app_context():
         with Session(db.engine) as session:
             run_bot_threaded(session)
-    app.run()
+    app.run(use_reloader=False)

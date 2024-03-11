@@ -212,8 +212,10 @@ def add_photo(item_id):
 @app.route('/delete/<int:item_id>', methods=['POST', 'GET'])
 def delete(item_id):
     item = Entity.query.get(item_id)
-    if item.parent_id is not None:
+    if item.parent_id:
         parent_id = item.parent_id
+    else:
+        parent_id = None
     # Remove all the barcodes.
     barcodes = Barcode.query.filter_by(entity_id=item.id).all()
     for barcode in barcodes:
