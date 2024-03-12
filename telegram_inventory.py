@@ -13,7 +13,7 @@ from datetime import datetime
 
 botToken = os.environ["BOT_TOKEN"]
 
-ADDING = 1
+ADDING, SELECT_PARENT, ASSIGN_PARENT = range(3)
 
 class TelegramInventoryBot():
     def __init__(self, token, dbSession: Session):
@@ -28,29 +28,85 @@ class TelegramInventoryBot():
         # self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND & ~filters.REPLY, self.text_received))
         # self.application.add_handler(MessageHandler(filters.REPLY, self.handle_reply))
         conv_handler = ConversationHandler(
-            entry_points=[MessageHandler(filters.PHOTO & ~filters.COMMAND & ~filters.REPLY, self.photo_received),
-                          MessageHandler(filters.TEXT & ~filters.COMMAND & ~filters.REPLY, self.text_received),
-                          CommandHandler("start", self.start)],
+            entry_points=[MessageHandler(~filters.REPLY & ~filters.COMMAND, self.handle_barcode),
+                          CommandHandler("start", self.start),
+                          CommandHandler("assign_parent", self.assign_parent_prompt),],
             states={
                 ADDING: [MessageHandler(filters.TEXT & ~filters.COMMAND, self.adding)],
+                SELECT_PARENT: [MessageHandler(~filters.COMMAND, self.select_parent)],
+                ASSIGN_PARENT: [MessageHandler(~filters.COMMAND, self.assign_parent)]
             },
             fallbacks=[CommandHandler("cancel", self.cancel),]
         )
         self.application.add_handler(conv_handler)
 
-    async def handleCodes(self, update: Update, query, context: ContextTypes.DEFAULT_TYPE) -> None:
-        items = Entity.query.filter(Entity.barcodes.any(Barcode.barcode == query)).all()
-        if len(items) == 0:
-            items = Entity.query.filter(Entity.name.contains(query)).all()
+    async def assign_parent_prompt(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        await update.message.reply_html(
+            f'Enter the parent barcode or ID.\nType /cancel to cancel.', 
+            reply_markup=ForceReply(selective=True), 
+            reply_to_message_id=update.message.message_id)
+        return SELECT_PARENT
+    
+    async def select_parent(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        # query = update.message.text
+        query = (await self.returnBarcodesOrQueryFromUpdate(update))[0]
+        item = Entity.query.filter(Entity.barcodes.any(Barcode.barcode == query)).first()
+        if not item:
+            item = Entity.query.get(query)
+        if not item:
+            await update.message.reply_html(
+                f'"{query}" not found in inventory, please enter the barcode or ID of the parent item.\nType /cancel to cancel.', 
+                reply_markup=ForceReply(selective=True), 
+                reply_to_message_id=update.message.message_id)
+            return SELECT_PARENT
+        context.user_data['parent'] = item.id
+        # await update.message.reply_html(
+        #     f'Enter the child barcode or ID.\nType /cancel to cancel.', 
+        #     reply_markup=ForceReply(selective=True), 
+        #     reply_to_message_id=update.message.message_id)
+        await self.showItemsInfo(update, item.id, context, desc_prefix=f'Parent selected.\nEnter child barcode or ID to assign.\n\n', predefinedItem=item)
+        return ASSIGN_PARENT
+    
+    async def assign_parent(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        # query = update.message.text
+        query = (await self.returnBarcodesOrQueryFromUpdate(update))[0]
+        item = Entity.query.filter(Entity.barcodes.any(Barcode.barcode == query)).first()
+        if not item:
+            item = Entity.query.get(query)
+        if not item:
+            await update.message.reply_html(
+                f'"{query}" not found in inventory, please enter the barcode or ID of the child item.\nType /cancel to cancel.', 
+                reply_markup=ForceReply(selective=True), 
+                reply_to_message_id=update.message.message_id)
+            return ASSIGN_PARENT
+        parent = context.user_data['parent']
+        # item.parent_id = parent
+        self.dbSession.query(Entity).filter(Entity.id == item.id).update({Entity.parent_id: parent})
+        self.dbSession.commit()
+        # await update.message.reply_html(
+        #     f'Assigned {item.name} as a child of {Entity.query.get(parent).name}.')
+        await self.showItemsInfo(update, item.id, context, desc_prefix=f'Parent assigned.\nType /cancel to cancel or enter another barcode or ID to assign next item.\n\n', predefinedItem=item)
+        return ASSIGN_PARENT
+
+    async def showItemsInfo(self, update: Update, query, context: ContextTypes.DEFAULT_TYPE, desc_prefix=None, predefinedItem=None) -> None:
+        if predefinedItem:
+            items = [predefinedItem]
+        else:
+            items = Entity.query.filter(Entity.barcodes.any(Barcode.barcode == query)).all()
             if len(items) == 0:
-                await update.message.reply_html(
-                    f'"{query}" not found in inventory, adding as new item. Please enter the name of the item.\nType /cancel to cancel.', 
-                    reply_markup=ForceReply(selective=True), 
-                    reply_to_message_id=update.message.message_id)
-                context.user_data['adding'] = query
-                return ADDING
+                items = Entity.query.filter(Entity.name.contains(query)).all()
+                if len(items) == 0:
+                    await update.message.reply_html(
+                        f'"{query}" not found in inventory, adding as new item. Please enter the name of the item.\nType /cancel to cancel.', 
+                        reply_markup=ForceReply(selective=True), 
+                        reply_to_message_id=update.message.message_id)
+                    context.user_data['adding'] = query
+                    return ADDING
         for item in items[:3]:
-            description = f"<b>{item.name}</b>\n"
+            description = ""
+            if desc_prefix:
+                description += desc_prefix
+            description += f"<b>{item.name}</b>\n"
             if item.parent:
                 if item.parent.parent:
                     description += f"Parent: {item.parent.parent.name} -> {item.parent.name}\n"
@@ -73,28 +129,32 @@ class TelegramInventoryBot():
             else:
                 await update.message.reply_html(rf"{description}")
         return ConversationHandler.END
-
-    async def photo_received(self, update: Update, context):
+    
+    async def returnBarcodesOrQueryFromUpdate(self, update: Update):
         if (update.message.photo):
             photoFileId = update.message.photo[-1].file_id
             photoFile = await self.application.bot.get_file(photoFileId)
-            
             res = await photoFile.download_as_bytearray()
-            barcode = Image.open(io.BytesIO(res))
-            ret = ConversationHandler.END # TODO: Really think if this is the best way to handle this
-            for code in zxingcpp.read_barcodes(barcode):
-                # print('Found barcode:'
-		        #     f'\n Text:    "{code.text}"'
-		        #     f'\n Format:   {code.format}'
-		        #     f'\n Content:  {code.content_type}'
-		        #     f'\n Position: {code.position}')
-                ret = await self.handleCodes(update, code.text, context)
-            return ret
-                
-
-    async def text_received(self, update: Update, context):
-        query = update.message.text
-        ret = await self.handleCodes(update, query, context)
+            barcodes_img = Image.open(io.BytesIO(res))
+            barcodes = []
+            for code in zxingcpp.read_barcodes(barcodes_img):
+                barcodes.append(code.text)
+            return barcodes
+        elif (update.message.text):
+            # if update.message.text.startswith("INV") or update.message.text.isnumeric():
+            return [update.message.text]
+        return None
+    
+    async def handle_barcode(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        ret = ConversationHandler.END # TODO: Really think if this is the best way to handle this?
+        barcodes = await self.returnBarcodesOrQueryFromUpdate(update)
+        if barcodes:
+            for barcode in barcodes:
+                ret = await self.showItemsInfo(update, barcode, context)
+        else:
+            await update.message.reply_html(
+                f'No barcode found in the message, try again.', 
+                reply_to_message_id=update.message.message_id)
         return ret
 
     async def adding(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -117,17 +177,17 @@ class TelegramInventoryBot():
         # TODO: Cancel forced reply
         return ConversationHandler.END
 
+    async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Send a message when the command /start is issued."""
+        res = Entity.query.all()
+        await update.message.reply_html(
+            f"Hi, send me a photo of a barcode to add it to the inventory or show the details of existing items.\nYou can also type the barcode or ID directly.\nType /assign_parent to assign a parent to an item.\n"
+        )
     async def run_bot(self):
         await self.application.initialize()
         await self.application.start()
         await self.application.updater.start_polling(allowed_updates=Update.ALL_TYPES)
 
-    async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Send a message when the command /start is issued."""
-        res = Entity.query.all()
-        await update.message.reply_html(
-            rf"Hi, send me a photo of a barcode to add it to the inventory or show the details of existing items."
-        )
 
 async def run_telegram_bot(dbSession) -> None:
     bot = TelegramInventoryBot(botToken, dbSession)
