@@ -64,7 +64,7 @@ class TelegramInventoryBot():
         #     f'Enter the child barcode or ID.\nType /cancel to cancel.', 
         #     reply_markup=ForceReply(selective=True), 
         #     reply_to_message_id=update.message.message_id)
-        await self.showItemsInfo(update, item.id, context, desc_prefix=f'Parent selected.\nEnter child barcode or ID to assign.\n\n', predefinedItem=item)
+        await self.showItemsInfo(update, item.id, context, desc_prefix=f'Parent selected.\nEnter child barcode or ID to assign.\n\n', searchByID=True)
         return ASSIGN_PARENT
     
     async def assign_parent(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -85,12 +85,12 @@ class TelegramInventoryBot():
         self.dbSession.commit()
         # await update.message.reply_html(
         #     f'Assigned {item.name} as a child of {Entity.query.get(parent).name}.')
-        await self.showItemsInfo(update, item.id, context, desc_prefix=f'Parent assigned.\nType /cancel to cancel or enter another barcode or ID to assign next item.\n\n', predefinedItem=item)
+        await self.showItemsInfo(update, item.id, context, desc_prefix=f'Parent assigned.\nType /cancel to cancel or enter another barcode or ID to assign next item.\n\n', searchByID=True)
         return ASSIGN_PARENT
 
-    async def showItemsInfo(self, update: Update, query, context: ContextTypes.DEFAULT_TYPE, desc_prefix=None, predefinedItem=None) -> None:
-        if predefinedItem:
-            items = [predefinedItem]
+    async def showItemsInfo(self, update: Update, query, context: ContextTypes.DEFAULT_TYPE, desc_prefix=None, searchByID=False) -> None:
+        if searchByID:
+            items = [Entity.query.get(query)]
         else:
             items = Entity.query.filter(Entity.barcodes.any(Barcode.barcode == query)).all()
             if len(items) == 0:
@@ -109,7 +109,7 @@ class TelegramInventoryBot():
             description += f"<b>{item.name}</b>\n"
             if item.parent:
                 if item.parent.parent:
-                    description += f"Parent: {item.parent.parent.name} -> {item.parent.name}\n"
+                    description += f"Parent: {item.parent.name} -> {item.parent.parent.name}\n"
                 else:
                     description += f"Parent: {item.parent.name}\n"
             if item.barcodes:
