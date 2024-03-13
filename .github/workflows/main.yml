@@ -1,0 +1,33 @@
+name: Flask CI/CD
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install waitress
+
+    - name: Run tests
+      run: |
+        python -m pytest
+
+    - name: Deploy locally
+      run: |
+        waitress-serve --port=5000 app:app
+        
