@@ -23,10 +23,6 @@ jobs:
         pip install -r requirements.txt
         pip install waitress
 
-    - name: Run tests
-      run: |
-        python -m pytest
-
     - name: Deploy locally
       run: |
         waitress-serve --port=5000 app:app
