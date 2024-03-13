@@ -27,5 +27,5 @@ jobs:
       run: |
         BOT_TOKEN=${{ secrets.BOT_TOKEN }} \
         FLASK_APP=app.py \
-        python -m waitress-serve --port=5000 app:app
+        waitress-serve --port=5000 app:app
         
