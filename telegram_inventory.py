@@ -4,8 +4,9 @@ import io
 from threading import Thread
 from telegram import ForceReply, Update, ReplyKeyboardRemove
 from telegram.ext import Application, ConversationHandler, ContextTypes, MessageHandler, filters, CommandHandler
-from inventory_flask import Entity, Barcode
-from sqlalchemy.orm import Session
+from models import Entity, Barcode
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 import zxingcpp
 import os
 from PIL import Image
@@ -13,10 +14,15 @@ from datetime import datetime
 
 botToken = os.environ["BOT_TOKEN"]
 
+# setup sqlalchemy engine
+basedir = os.path.abspath(os.path.dirname(__file__))
+DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'instance/inventory.db')
+Session = sessionmaker(create_engine(DATABASE_URI))
+
 ADDING, SELECT_PARENT, ASSIGN_PARENT = range(3)
 
 class TelegramInventoryBot():
-    def __init__(self, token, dbSession: Session):
+    def __init__(self, token, dbSession):
         print(token)
         self.application = Application.builder().token(token).build()
         self.dbSession = dbSession
@@ -50,9 +56,9 @@ class TelegramInventoryBot():
     async def select_parent(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         # query = update.message.text
         query = (await self.returnBarcodesOrQueryFromUpdate(update))[0]
-        item = Entity.query.filter(Entity.barcodes.any(Barcode.barcode == query)).first()
+        item = self.dbSession.query(Entity).filter(Entity.barcodes.any(Barcode.barcode == query)).first()
         if not item:
-            item = Entity.query.get(query)
+            item = self.dbSession.query(Entity).get(query)
         if not item:
             await update.message.reply_html(
                 f'"{query}" not found in inventory, please enter the barcode or ID of the parent item.\nType /cancel to cancel.', 
@@ -70,9 +76,9 @@ class TelegramInventoryBot():
     async def assign_parent(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         # query = update.message.text
         query = (await self.returnBarcodesOrQueryFromUpdate(update))[0]
-        item = Entity.query.filter(Entity.barcodes.any(Barcode.barcode == query)).first()
+        item = self.dbSession.query(Entity).filter(Entity.barcodes.any(Barcode.barcode == query)).first()
         if not item:
-            item = Entity.query.get(query)
+            item = self.dbSession.query(Entity).get(query)
         if not item:
             await update.message.reply_html(
                 f'"{query}" not found in inventory, please enter the barcode or ID of the child item.\nType /cancel to cancel.', 
@@ -84,17 +90,17 @@ class TelegramInventoryBot():
         self.dbSession.query(Entity).filter(Entity.id == item.id).update({Entity.parent_id: parent})
         self.dbSession.commit()
         # await update.message.reply_html(
-        #     f'Assigned {item.name} as a child of {Entity.query.get(parent).name}.')
+        #     f'Assigned {item.name} as a child of {self.dbSession.query(Entity).get(parent).name}.')
         await self.showItemsInfo(update, item.id, context, desc_prefix=f'Parent assigned.\nType /cancel to cancel or enter another barcode or ID to assign next item.\n\n', searchByID=True)
         return ASSIGN_PARENT
 
     async def showItemsInfo(self, update: Update, query, context: ContextTypes.DEFAULT_TYPE, desc_prefix=None, searchByID=False) -> None:
         if searchByID:
-            items = [Entity.query.get(query)]
+            items = [self.dbSession.query(Entity).get(query)]
         else:
-            items = Entity.query.filter(Entity.barcodes.any(Barcode.barcode == query)).all()
+            items = self.dbSession.query(Entity).filter(Entity.barcodes.any(Barcode.barcode == query)).all()
             if len(items) == 0:
-                items = Entity.query.filter(Entity.name.contains(query)).all()
+                items = self.dbSession.query(Entity).filter(Entity.name.contains(query)).all()
                 if len(items) == 0:
                     await update.message.reply_html(
                         f'"{query}" not found in inventory, adding as new item. Please enter the name of the item.\nType /cancel to cancel.', 
@@ -179,27 +185,16 @@ class TelegramInventoryBot():
 
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Send a message when the command /start is issued."""
-        res = Entity.query.all()
+        res = self.dbSession.query(Entity).all()
         await update.message.reply_html(
             f"Hi, send me a photo of a barcode to add it to the inventory or show the details of existing items.\nYou can also type the barcode or ID directly.\nType /assign_parent to assign a parent to an item.\n"
         )
-    async def run_bot(self):
-        await self.application.initialize()
-        await self.application.start()
-        await self.application.updater.start_polling(allowed_updates=Update.ALL_TYPES)
+    def run_bot(self):
+        self.application.run_polling(allowed_updates=Update.ALL_TYPES)
 
-
-async def run_telegram_bot(dbSession) -> None:
+def run_telegram_bot(dbSession) -> None:
     bot = TelegramInventoryBot(botToken, dbSession)
-    print("Running bot")
-    await bot.run_bot()
+    bot.run_bot()
 
-def start_background_loop(loop):
-    asyncio.set_event_loop(loop)
-    loop.run_forever()
-
-def run_bot_threaded(session):
-    loop = asyncio.new_event_loop()
-    loop.create_task(run_telegram_bot(session))
-    t = Thread(target=start_background_loop, args=(loop,), daemon=True)
-    t.start()
+if __name__ == "__main__":
+    run_telegram_bot(Session())

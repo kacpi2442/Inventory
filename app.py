@@ -1,6 +1,4 @@
 from inventory_flask import app, db
-from sqlalchemy.orm import Session
-from telegram_inventory import run_bot_threaded
 
 async def run_flask_app():
     app.run()
@@ -8,6 +6,4 @@ async def run_flask_app():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-        with Session(db.engine) as session:
-            run_bot_threaded(session)
     app.run(use_reloader=False)
