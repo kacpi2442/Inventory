@@ -19,5 +19,5 @@ ADD . /app
 EXPOSE 5000
 
 # Run app.py when the container launches
-# CMD ["python", "app.py"] 
-CMD ["waitress-serve", "--port=5000", "app:app"] & ["python", "telegram-inventory.py"]
+# CMD ["waitress-serve", "--port=5000", "app:app"] & ["python", "telegram-inventory.py"]
+ENTRYPOINT waitress-serve --port=5000 app:app && python telegram-inventory.py
