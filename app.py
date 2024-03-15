@@ -6,4 +6,4 @@ async def run_flask_app():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(use_reloader=False)
+    app.run()

@@ -1,7 +1,5 @@
-import asyncio
 import tempfile
 import io
-from threading import Thread
 from telegram import ForceReply, Update, ReplyKeyboardRemove
 from telegram.ext import Application, ConversationHandler, ContextTypes, MessageHandler, filters, CommandHandler
 from models import Entity, Barcode
@@ -23,7 +21,6 @@ ADDING, SELECT_PARENT, ASSIGN_PARENT = range(3)
 
 class TelegramInventoryBot():
     def __init__(self, token, dbSession):
-        print(token)
         self.application = Application.builder().token(token).build()
         self.dbSession = dbSession
         self.tmpDir = tempfile.TemporaryDirectory()
@@ -45,6 +42,7 @@ class TelegramInventoryBot():
             fallbacks=[CommandHandler("cancel", self.cancel),]
         )
         self.application.add_handler(conv_handler)
+        print("Bot initialized.")
 
     async def assign_parent_prompt(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.message.reply_html(
@@ -166,7 +164,6 @@ class TelegramInventoryBot():
     async def adding(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         name = update.message.text
         barcode = context.user_data['adding']
-        print(f"Adding {name} with barcode {barcode}")
         ## Add the item to the inventory
         item = Entity(name=name, created=datetime.now(), modified=datetime.now())
         self.dbSession.add(item)
