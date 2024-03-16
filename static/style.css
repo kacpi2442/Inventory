@@ -33,6 +33,13 @@ th, td {
     padding: 8px;
     text-align: left;
     border-bottom: 1px solid white;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+th:last-child,
+td:last-child {
+    width: 1px;
 }
 th {
     background-color: #2e2e2e;
