@@ -19,15 +19,11 @@
         <div class="top-nav">
             <div class="buttons-container">
                 <a href="../" class="button">
-                    <svg width="20" height="20" viewBox="0 0 20 17" fill="#4f4f4f" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M8 17V11H12V17H17V9H20L10 0L0 9H3V17H8Z"/>
-                    </svg>        
+                    <i data-lucide="home"></i>
                 </a>
                 {% if detailedItem %}{% if detailedItem.parent %}
                 <a href="{{ detailedItem.parent.id }}" title="{{ detailedItem.parent.name }}" class="button">
-                    <svg width="33" height="33" viewBox="34 34 35 35" fill="#4f4f4f" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M42 57L51 48L60 57H42Z"/>
-                    </svg>                        
+                    <i data-lucide="arrow-up"></i>       
                 </a>
                 {% endif %}{% endif %}
             </div>
@@ -43,9 +39,7 @@
                 {% else %}
                 <a href="/add" class="button">
                 {% endif %}
-                    <svg width="20" height="20" viewBox="6 6 22 22" fill="#4f4f4f" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M26.125 17.875H17.875V26.125H15.125V17.875H6.875V15.125H15.125V6.875H17.875V15.125H26.125V17.875Z"/>
-                    </svg>
+                    <i data-lucide="plus"></i>
                 </a>
                 {% if detailedItem %}
                 {% if editing %}
@@ -53,9 +47,7 @@
                 {% else %}
                 <a href="/edit/{{ detailedItem.id }}" class="button">
                 {% endif %}
-                    <svg width="20" height="20" viewBox="0 0 18 19" fill="#4f4f4f" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M0 15.0422V19H3.74948L14.8079 7.32718L11.0585 3.36939L0 15.0422ZM17.7075 4.26649C18.0975 3.85488 18.0975 3.18997 17.7075 2.77836L15.3679 0.308707C14.9779 -0.102902 14.348 -0.102902 13.9581 0.308707L12.1283 2.24011L15.8778 6.19789L17.7075 4.26649Z" />
-                    </svg>
+                    <i data-lucide="edit"></i>
                 </a>
                 {% endif %}
             </div>
@@ -140,11 +132,12 @@
                         <div class="buttons">
                             {% if item.children|length > 0 %}
                             <form action="/delete/{{ item.id }}" method="POST" onsubmit="return confirm('Are you sure you want to delete &quot;{{ item.name }}&quot;?');">
-                                <input type="submit" class="button delete-child-button" value="Delete with children" />
+                                <button class="button delete-child-button" type="submit"><i data-lucide="list-x"></i></button>
                             </form>
                             {% endif %}
                             <form action="/delete/{{ item.id }}" method="POST" onsubmit="return confirm('Are you sure you want to delete &quot;{{ item.name }}&quot;?');">
-                                <input type="submit" class="button delete-button" value="Delete" />
+                                <!-- <input type="submit" class="button delete-button" value="Delete" /> -->
+                                <button class="button delete-button" type="submit"><i data-lucide="trash-2"></i></button>
                             </form>
                         </div>
                     </td>
@@ -162,5 +155,9 @@
         {% endif %}
         {% endblock %}
     </div>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+      lucide.createIcons();
+    </script>
 </body>
 </html>

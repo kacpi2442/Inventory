@@ -35,7 +35,7 @@
         {% endif %}
         <p>Creation date: {{ detailedItem.created }}</p>
         <p>Modify date: {{ detailedItem.modified }}</p>
-        <button class="button delete-button" onclick="window.location.href='/delete/{{ detailedItem.id }}'">Delete</button>
+        <button class="button delete-button" onclick="window.location.href='/delete/{{ detailedItem.id }}'"><i data-lucide="trash-2"></i></button>
         {% endblock %}
     </div>
     <div class="itemImage">
@@ -68,10 +68,10 @@
             });
         </script>
         <div class="buttons">
-            <label class="next-button button">&lt</label>
-            <label for="photo-upload" class="upload-button button">Upload Photo</label>
-            <label class="delete-button button">Delete</label>
-            <label class="prev-button button">&gt</label>
+            <label class="next-button button"><i data-lucide="arrow-left"></i></label>
+            <label for="photo-upload" class="upload-button button"><i data-lucide="upload"></i></label>
+            <label class="delete-button button"><i data-lucide="trash"></i></label>
+            <label class="prev-button button"><i data-lucide="arrow-right"></i></label>
         </div>
         {% endif %}
     </div>

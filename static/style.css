@@ -61,6 +61,10 @@ table .buttons{
     justify-content: flex-end;
 }
 
+.buttons form .button{
+    padding: 6px;
+}
+
 .details-container {
     display: flex;
     justify-content: center;
@@ -146,6 +150,10 @@ table .buttons{
     background-color: #b5261b;
 }
 
+.buttons-container .button svg{
+    color: #4f4f4f;
+}
+
 .itemImage .buttons .delete-button,
 .itemImage .buttons .upload-button{
     flex-grow: 2;
@@ -224,7 +232,7 @@ a.button-selected:hover{
 }
 
 a.button-selected svg{
-    fill: white;
+    color: white !important;
 }
 
 /* Edit form */
