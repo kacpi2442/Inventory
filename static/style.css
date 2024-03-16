@@ -3,21 +3,31 @@ body {
     color: white;
     font-family: 'Helvetica', 'Verdana', 'Roboto', sans-serif;
 }
+
+div.table-container {
+    width: 85vw;
+    margin: 0 auto;
+}
+
 table {
     border-collapse: collapse;
-    width: 85vw;
-    margin: 20px auto;
+    width: 100%;
+    margin: 20px 0;
 }
-.rowlink::before {
-    content: "";
-    position: absolute;
+
+table a {
+    color: white;
+    text-decoration: none;
     display: block;
-    top: 0;
-    left: 0;
-    right: 0;
-    width: auto;
-    height: 55px;
-    z-index: 0;
+}
+table input[type=checkbox] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    cursor: pointer;
 }
 th, td {
     padding: 8px;
@@ -31,6 +41,7 @@ th {
 tr {
     position: relative;
     -webkit-transform: translateZ(0);
+    transform: translateZ(0);
 }
 tr:nth-child(even) {
     background-color: #4d4c4a;
@@ -40,47 +51,7 @@ tr:nth-child(even) {
 }
 
 table .buttons{
-    position: relative;
-    display: flex;
-    gap: 10px;
-    align-items: stretch;
-    flex-direction: row;
     justify-content: flex-end;
-    height: 100%;
-    z-index: 1;
-}
-
-table .buttons .button {
-    display: inline-block;
-    padding: 10px 20px;
-    color: #fff;
-    cursor: pointer;
-    border-radius: 5px;
-    border: none;
-    background-color: #369bf4;
-    flex-grow: 1;
-    text-align: center;
-}
-
-table .buttons .button:hover {
-    background-color: #247cc9;
-}
-
-table .buttons .delete-button {
-    background-color: #f44336;
-}
-
-table .buttons .delete-button:hover {
-    background-color: #d32f2f;
-}
-
-table .buttons .delete-child-button {
-    background-color: #d92c20;
-}
-
-table .buttons .delete-child-button:hover {
-    background-color: #b5261b;
-
 }
 
 .details-container {
@@ -123,14 +94,14 @@ table .buttons .delete-child-button:hover {
     border-radius: 5px;
 }
 
-.details-container .itemImage .buttons{
+.buttons{
     display: flex;
     gap: 10px;
     align-items: stretch;
     flex-direction: row;
 }
 
-.details-container .itemImage .buttons .button {
+.buttons .button {
     padding: 10px;
     color: #fff;
     cursor: pointer;
@@ -141,26 +112,36 @@ table .buttons .delete-child-button:hover {
     text-align: center;
 }
 
-.details-container .itemImage .buttons .button:hover {
+.buttons .button:hover {
     background-color: #247cc9;
 }
-
-.details-container .itemImage .buttons .upload-button {
+.buttons .upload-button {
     background-color: #4CAF50;
-    flex-grow: 2;
 }
 
-.details-container .itemImage .buttons .upload-button:hover {
+.buttons .upload-button:hover {
     background-color: #45a049;
 }
 
-.details-container .itemImage .buttons .delete-button {
+.buttons .delete-button {
     background-color: #f44336;
-    flex-grow: 2;
 }
 
-.details-container .itemImage .buttons .delete-button:hover {
+.buttons .delete-button:hover {
     background-color: #d32f2f;
+}
+
+.buttons .delete-child-button {
+    background-color: #d92c20;
+}
+
+.buttons .delete-child-button:hover {
+    background-color: #b5261b;
+}
+
+.itemImage .buttons .delete-button,
+.itemImage .buttons .upload-button{
+    flex-grow: 2;
 }
 
 a.location{
@@ -322,4 +303,52 @@ div.details button.delete-button{
 }
 div.details button.delete-button:hover{
     background-color: #d32f2f;
+}
+
+
+/* Dialog boxes */
+.dialog-box{
+    display: none;
+    position: fixed;
+    z-index: 1;
+    width: 300px;
+    height: auto;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+    justify-content: center;
+    align-items: center;
+    /* center the dialog box */
+    top: 40vh;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 16px;
+    padding: 20px;
+}
+
+.dialog-box input[type=number]{
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 8px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    border-radius: 5px;
+}
+
+.dialog-box select{
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 8px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    border-radius: 5px;
+}
+
+div#table-modify-buttons{
+    display: none;
+}
+
+.buttons#table-modify-buttons{
+    width: 36vw;
+    /* width: fit-content; */
+    margin: 0 auto;
 }

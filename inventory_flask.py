@@ -17,7 +17,7 @@ db = SQLAlchemy(app, metadata=metadata)
 
 @app.route('/') 
 def index():
-    return render_template('base.html', items=db.session.query(Entity).filter_by(parent_id=None).all()) # Todo: Order by number of children.
+    return render_template('base.html', items=db.session.query(Entity).filter_by(parent_id=None).all(), owners=db.session.query(Owner).all()) # Todo: Order by number of children.
 
 @app.route('/details/<int:item_id>', methods=['GET'])
 def details(item_id):
@@ -25,7 +25,7 @@ def details(item_id):
     photos_base64 = []
     for photo in item.photos:
         photos_base64.append(base64.b64encode(photo.image).decode('utf-8'))
-    return render_template('details.html', detailedItem=item, items=item.children, photos_base64=photos_base64)
+    return render_template('details.html', detailedItem=item, items=item.children, photos_base64=photos_base64, owners=db.session.query(Owner).all())
 
 # Search for items.
 @app.route('/search', methods=['POST'])
@@ -39,7 +39,7 @@ def search():
     else:
         items = db.session.query(Entity).filter((Entity.name.contains(search)) | 
                                     (Entity.barcodes.any(Barcode.barcode == search))).all()
-    return render_template('base.html', items=items, search=search, show_parent=True)
+    return render_template('base.html', items=items, search=search, show_parent=True, owners=db.session.query(Owner).all())
 
 @app.route('/edit/<int:item_id>', methods=['GET'])
 def edit(item_id):
@@ -163,40 +163,121 @@ def add_photo(item_id):
     item.modified = datetime.now()
     return redirect(url_for('index'))
 
+def delete_item_props(item_id):
+    # Remove all the barcodes.
+    barcodes = db.session.query(Barcode).filter_by(entity_id=item_id).all()
+    for barcode in barcodes:
+        db.session.delete(barcode)
+    # Remove all the ownerships.
+    ownerships = db.session.query(Ownership).filter_by(entity_id=item_id).all()
+    for ownership in ownerships:
+        db.session.delete(ownership)
+    # Remove all the properties.
+    properties = db.session.query(EntityProperties).filter_by(entity_id=item_id).all()
+    for property in properties:
+        db.session.delete(property)
+    # Remove all the photos.
+    photos = db.session.query(EntityPhoto).filter_by(entity_id=item_id).all()
+    for photo in photos:
+        db.session.delete(photo)
 
-@app.route('/delete/<int:item_id>', methods=['POST', 'GET'])
+@app.route('/delete/<int:item_id>', methods=['POST', 'GET']) # Old method for deleting single item.
 def delete(item_id):
     item = db.session.query(Entity).get(item_id)
     if item.parent_id:
         parent_id = item.parent_id
     else:
         parent_id = None
-    # Remove all the barcodes.
-    barcodes = db.session.query(Barcode).filter_by(entity_id=item.id).all()
-    for barcode in barcodes:
-        db.session.delete(barcode)
-    db.session.commit()
-    # Remove all the ownerships.
-    ownerships = db.session.query(Ownership).filter_by(entity_id=item.id).all()
-    for ownership in ownerships:
-        db.session.delete(ownership)
-    db.session.commit()
-    # Remove all the properties.
-    properties = db.session.query(EntityProperties).filter_by(entity_id=item.id).all()
-    for property in properties:
-        db.session.delete(property)
-    db.session.commit()
-    # Remove all the photos.
-    photos = db.session.query(EntityPhoto).filter_by(entity_id=item.id).all()
-    for photo in photos:
-        db.session.delete(photo)
-    db.session.commit()
+    delete_item_props(item.id)
     # Remove the item.
     db.session.delete(item)
     db.session.commit()
     if parent_id is not None:
         return redirect(url_for('details', item_id=parent_id))
     return redirect(url_for('index'))
+
+def select_all(request):
+    path = request.referrer.split('/')[3:] # Remove the http://localhost:5000/ or any other domain.
+    if path == ['']:
+        return "Modifying all items in the database is forbidden", 406
+    if path[0] == 'search':
+        search_query = json.loads(request.data)['search']
+        return f"Modifying all items from search results not yet implemented, but your search query is {search_query}", 501 # TODO: Implement this.
+    if (path[0] == 'details' or path[0] == 'edit') and path[1].isdigit():
+        id = int(path[1])
+        children = db.one_or_404(Entity, id).children
+        items = [child.id for child in children]
+        return items, 200
+
+@app.route('/delete_multiple', methods=['POST'])
+def delete_multiple():
+    try:
+        data = json.loads(request.data)
+        items = data['selected']
+        if items == -1: # If -1, all items are selected.
+            selectAll = select_all(request)
+            if selectAll[1] != 200:
+                return selectAll
+            items = selectAll[0]
+        for item_id in items:
+            print(item_id)
+            item = db.get_or_404(Entity, item_id)
+            delete_item_props(item.id)
+            # Remove the item.
+            db.session.delete(item)
+        db.session.commit()
+        return "Items deleted successfully.", 200
+    except Exception as e:
+        return str(e), 400
+    
+@app.route('/change_ownership', methods=['POST'])
+def change_ownership():
+    try:
+        data = json.loads(request.data)
+        print(Owner, data['owner_id'])
+        owner = db.get_or_404(Owner, data['owner_id'])
+        items = data['selected']
+        if items == -1: # If -1, all items are selected.
+            selectAll = select_all(request)
+            if selectAll[1] != 200:
+                return selectAll
+            items = selectAll[0]
+        for item_id in items:
+            print(item_id)
+            item = db.get_or_404(Entity, item_id)
+            # Remove all the ownerships.
+            ownerships = db.session.query(Ownership).filter_by(entity_id=item.id).all()
+            for ownership in ownerships:
+                db.session.delete(ownership)
+            # Add new ownership
+            ownership = Ownership(entity_id=item.id, owner_id=owner.id, own='100')
+            db.session.add(ownership)
+        db.session.commit()
+        return f"Ownership updated successfully.", 200
+    except Exception as e:
+        # print stacktrace
+        import traceback
+        traceback.print_exc()
+        return str(e), 400
+
+@app.route('/change_parent', methods=['POST'])
+def change_parent():
+    try:
+        data = json.loads(request.data)
+        parent = db.get_or_404(Entity, data['parent_id'])
+        items = data['selected']
+        if items == -1: # If -1, all items are selected.
+            selectAll = select_all(request)
+            if selectAll[1] != 200:
+                return selectAll
+            items = selectAll[0]
+        for item_id in items:
+            item = db.get_or_404(Entity, item_id)
+            item.parent_id = parent.id
+        db.session.commit()
+        return f"Parent updated successfully.", 200
+    except Exception as e:
+        return str(e), 400
 
 if __name__ == '__main__':
     with app.app_context():
