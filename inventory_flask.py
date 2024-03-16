@@ -197,3 +197,8 @@ def delete(item_id):
     if parent_id is not None:
         return redirect(url_for('details', item_id=parent_id))
     return redirect(url_for('index'))
+
+if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
+    app.run()

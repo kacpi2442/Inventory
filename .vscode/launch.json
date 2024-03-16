@@ -2,10 +2,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "app.py",
+            "name": "Debug telegram bot",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/app.py",
+            "program": "${workspaceFolder}/telegram_inventory.py",
             "envFile": "${workspaceFolder}/.env"
         },
         {
