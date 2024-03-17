@@ -28,18 +28,21 @@ def details(item_id):
         photos_base64.append(base64.b64encode(photo.image).decode('utf-8'))
     return render_template('details.html', detailedItem=item, items=item.children, photos_base64=photos_base64, owners=db.session.query(Owner).all())
 
+def search_for_item(search):
+    if search.startswith('@ '):
+        deep_search = search[2:]
+        return db.session.query(Entity).filter((Entity.name.contains(deep_search)) |
+                                    (Entity.barcodes.any(Barcode.barcode == deep_search)) |
+                                    (Entity.properties.any(EntityProperties.value.contains(deep_search)))).all()
+    else:
+        return db.session.query(Entity).filter((Entity.name.contains(search)) | 
+                                    (Entity.barcodes.any(Barcode.barcode == search))).all()
+
 # Search for items.
 @app.route('/search', methods=['POST'])
 def search():
     search = request.form['search']
-    if search.startswith('@ '):
-        deep_search = search[2:]
-        items = db.session.query(Entity).filter((Entity.name.contains(deep_search)) |
-                                    (Entity.barcodes.any(Barcode.barcode == deep_search)) |
-                                    (Entity.properties.any(EntityProperties.value.contains(deep_search)))).all()
-    else:
-        items = db.session.query(Entity).filter((Entity.name.contains(search)) | 
-                                    (Entity.barcodes.any(Barcode.barcode == search))).all()
+    items = search_for_item(search)
     return render_template('base.html', items=items, search=search, show_parent=True, owners=db.session.query(Owner).all())
 
 @app.route('/edit/<int:item_id>', methods=['GET'])
@@ -201,10 +204,11 @@ def delete(item_id):
 def select_all(request):
     path = request.referrer.split('/')[3:] # Remove the http://localhost:5000/ or any other domain.
     if path == ['']:
-        return "Modifying all items in the database is forbidden", 406
+        return "Modifying all root items in the database is not allowed", 406
     if path[0] == 'search':
         search_query = json.loads(request.data)['search']
-        return f"Modifying all items from search results not yet implemented, but your search query is {search_query}", 501 # TODO: Implement this.
+        items = [item.id for item in search_for_item(search_query)]
+        return items, 200.
     if (path[0] == 'details' or path[0] == 'edit') and path[1].isdigit():
         id = int(path[1])
         children = db.one_or_404(Entity, id).children
