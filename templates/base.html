@@ -94,7 +94,7 @@
                     <th>Name</th>
                     <th>Barcode</th>
                     {% if show_parent %}
-                    <th>Location</th> <!-- Parent, to be deleted from showing -->
+                    <th>Location</th>
                     {% endif %}
                     <th>Ownership</th>
                     <th>Children</th>
@@ -105,8 +105,9 @@
                     <td>
                         <input type="checkbox" id="{{ item.id }}" class="select" />
                     </td>
-                    <td><a href="/details/{{ item.id }}" class="rowlink">{{ item.name }}</a></td>
+                    <td><a href="/details/{{ item.id }}">{{ item.name }}</a></td>
                     <td title="{% if item.barcodes|length > 1 %}{% for barcode in item.barcodes %}{{ barcode.barcode }}, {% endfor %}{% endif %}">
+                        <a href="/details/{{ item.id }}">
                         {% if item.barcodes|length > 1 %}
                         {{ item.barcodes[0].barcode }} +
                         {% elif item.barcodes|length == 1 %}
@@ -114,9 +115,10 @@
                         {% else %}
                         No barcode
                         {% endif %}
+                        </a>
                     </td>
                     {% if show_parent %}
-                    <td>{{ item.parent.name }}</td>
+                    <td>{% if item.parent %}<a href="/details/{{ item.parent.id }}">{{ item.parent.name }}</a>{% endif %}</td>
                     {% endif %}
                     <td title="{% if item.ownerships|length > 1 %}{% for ownership in item.ownerships %}{{ ownership.owner.name }} - {{ ownership.own }}%&#10;{% endfor %}{% endif %}">
                         {% if item.ownerships|length > 1 %}
@@ -136,7 +138,6 @@
                             </form>
                             {% endif %}
                             <form action="/delete/{{ item.id }}" method="POST" onsubmit="return confirm('Are you sure you want to delete &quot;{{ item.name }}&quot;?');">
-                                <!-- <input type="submit" class="button delete-button" value="Delete" /> -->
                                 <button class="button delete-button" type="submit"><i data-lucide="trash-2"></i></button>
                             </form>
                             <form action="/edit/{{ item.id }}" method="GET">
