@@ -6,6 +6,7 @@ from models import metadata, Entity, Barcode, EntityPhoto, EntityProperties, Pro
 from datetime import datetime
 import os
 import base64
+import traceback
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'instance/inventory.db')
@@ -149,6 +150,7 @@ def update():
         db.session.commit()
         return f"Item ID:{item.id} updated successfully.", 200
     except Exception as e:
+        traceback.print_exc()
         return str(e), 400
 
 # Add a new photo.
@@ -220,7 +222,6 @@ def delete_multiple():
                 return selectAll
             items = selectAll[0]
         for item_id in items:
-            print(item_id)
             item = db.get_or_404(Entity, item_id)
             delete_item_props(item.id)
             # Remove the item.
@@ -228,14 +229,17 @@ def delete_multiple():
         db.session.commit()
         return "Items deleted successfully.", 200
     except Exception as e:
+        traceback.print_exc()
         return str(e), 400
     
 @app.route('/change_ownership', methods=['POST'])
 def change_ownership():
     try:
         data = json.loads(request.data)
-        print(Owner, data['owner_id'])
-        owner = db.get_or_404(Owner, data['owner_id'])
+        if data['owner_id'].isdigit():
+            owner = db.get_or_404(Owner, data['owner_id'])
+        else:
+            owner = None
         items = data['selected']
         if items == -1: # If -1, all items are selected.
             selectAll = select_all(request)
@@ -243,20 +247,18 @@ def change_ownership():
                 return selectAll
             items = selectAll[0]
         for item_id in items:
-            print(item_id)
             item = db.get_or_404(Entity, item_id)
             # Remove all the ownerships.
             ownerships = db.session.query(Ownership).filter_by(entity_id=item.id).all()
             for ownership in ownerships:
                 db.session.delete(ownership)
             # Add new ownership
-            ownership = Ownership(entity_id=item.id, owner_id=owner.id, own='100')
-            db.session.add(ownership)
+            if owner is not None:
+                ownership = Ownership(entity_id=item.id, owner_id=owner.id, own='100')
+                db.session.add(ownership)
         db.session.commit()
         return f"Ownership updated successfully.", 200
     except Exception as e:
-        # print stacktrace
-        import traceback
         traceback.print_exc()
         return str(e), 400
 
@@ -264,7 +266,11 @@ def change_ownership():
 def change_parent():
     try:
         data = json.loads(request.data)
-        parent = db.get_or_404(Entity, data['parent_id'])
+        if data['parent_id'].isdigit() and int(data['parent_id']) > 0:
+            parent = db.get_or_404(Entity, data['parent_id'])
+            parent_id = parent.id
+        else:
+            parent_id = None
         items = data['selected']
         if items == -1: # If -1, all items are selected.
             selectAll = select_all(request)
@@ -273,10 +279,11 @@ def change_parent():
             items = selectAll[0]
         for item_id in items:
             item = db.get_or_404(Entity, item_id)
-            item.parent_id = parent.id
+            item.parent_id = parent_id
         db.session.commit()
         return f"Parent updated successfully.", 200
     except Exception as e:
+        traceback.print_exc()
         return str(e), 400
 
 if __name__ == '__main__':
