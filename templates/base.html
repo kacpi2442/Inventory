@@ -139,6 +139,9 @@
                                 <!-- <input type="submit" class="button delete-button" value="Delete" /> -->
                                 <button class="button delete-button" type="submit"><i data-lucide="trash-2"></i></button>
                             </form>
+                            <form action="/edit/{{ item.id }}" method="GET">
+                                <button class="button edit-button" type="submit"><i data-lucide="edit"></i></button>
+                            </form>
                         </div>
                     </td>
                 </tr>
