@@ -16,7 +16,7 @@ app = Flask(__name__, instance_relative_config=True)
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
 db = SQLAlchemy(app, metadata=metadata)
 
-items_per_page = 3
+items_per_page = 25
 
 @app.route('/') 
 def index():

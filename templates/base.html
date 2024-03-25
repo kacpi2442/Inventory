@@ -158,37 +158,39 @@
             <div class="page-items">
                 {{ items.first }} - {{ items.last }} of {{ items.total }}
             </div>
-            <div class="pagination buttons">
-            {% set args = request.args.copy() %}
-            {% set _ = args.pop('page', None) %}
-            {% if detailedItem %}
-                {% set _ = args.update({'item_id': detailedItem.id}) %}
-            {% endif %}
+            {% if items.pages > 1 %}
+                <div class="pagination buttons">
+                {% set args = request.args.copy() %}
+                {% set _ = args.pop('page', None) %}
+                {% if detailedItem %}
+                    {% set _ = args.update({'item_id': detailedItem.id}) %}
+                {% endif %}
 
-            {% if items.has_prev %}
-                <a href="{{ url_for(request.endpoint, page=items.prev_num, **args) }}">
-                    <button class="button">&lt;</button>
-                </a>
-            {% endif %}
-            {% for page in items.iter_pages() %}
-                {% if page %}
-                {% if page != items.page %}
-                    <a href="{{ url_for(request.endpoint, page=page, **args) }}">
-                        <button class="button">{{ page }}</button>
+                {% if items.has_prev %}
+                    <a href="{{ url_for(request.endpoint, page=items.prev_num, **args) }}">
+                        <button class="button">&lt;</button>
                     </a>
-                {% else %}
-                    <button class="button button-selected">{{ page }}</button>
                 {% endif %}
-                {% else %}
-                <button class="button button-disabled">...</button>
+                {% for page in items.iter_pages() %}
+                    {% if page %}
+                    {% if page != items.page %}
+                        <a href="{{ url_for(request.endpoint, page=page, **args) }}">
+                            <button class="button">{{ page }}</button>
+                        </a>
+                    {% else %}
+                        <button class="button button-selected">{{ page }}</button>
+                    {% endif %}
+                    {% else %}
+                    <button class="button button-disabled">...</button>
+                    {% endif %}
+                {% endfor %}
+                {% if items.has_next %}
+                    <a href="{{ url_for(request.endpoint, page=items.next_num, **args) }}">
+                        <button class="button">&gt;</button>
+                    </a>
                 {% endif %}
-            {% endfor %}
-            {% if items.has_next %}
-                <a href="{{ url_for(request.endpoint, page=items.next_num, **args) }}">
-                    <button class="button">&gt;</button>
-                </a>
+                </div>
             {% endif %}
-            </div>
         </div>
         {% endif %}
         {% endblock %}
