@@ -16,9 +16,12 @@ app = Flask(__name__, instance_relative_config=True)
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
 db = SQLAlchemy(app, metadata=metadata)
 
+items_per_page = 3
+
 @app.route('/') 
 def index():
-    return render_template('base.html', items=db.session.query(Entity).filter_by(parent_id=None).all(), owners=db.session.query(Owner).all()) # Todo: Order by number of children.
+    items = db.session.query(Entity).filter_by(parent_id=None).paginate(per_page=items_per_page)
+    return render_template('base.html', items=items, owners=db.session.query(Owner).all()) # Todo: Order by number of children.
 
 @app.route('/details/<int:item_id>', methods=['GET'])
 def details(item_id):
@@ -26,23 +29,34 @@ def details(item_id):
     photos_base64 = []
     for photo in item.photos:
         photos_base64.append(base64.b64encode(photo.image).decode('utf-8'))
-    return render_template('details.html', detailedItem=item, items=item.children, photos_base64=photos_base64, owners=db.session.query(Owner).all())
+    children = db.session.query(Entity).filter_by(parent_id=item_id).paginate(per_page=items_per_page)
+    search = request.args.get('q')
+    return render_template('details.html', detailedItem=item, items=children, photos_base64=photos_base64, owners=db.session.query(Owner).all(), search=search)
 
-def search_for_item(search):
+def search_for_item(search, paginate=False):
     if search.startswith('@ '):
         deep_search = search[2:]
-        return db.session.query(Entity).filter((Entity.name.contains(deep_search)) |
+        query = db.session.query(Entity).filter((Entity.name.contains(deep_search)) |
                                     (Entity.barcodes.any(Barcode.barcode == deep_search)) |
-                                    (Entity.properties.any(EntityProperties.value.contains(deep_search)))).all()
+                                    (Entity.properties.any(EntityProperties.value.contains(deep_search))))
     else:
-        return db.session.query(Entity).filter((Entity.name.contains(search)) | 
-                                    (Entity.barcodes.any(Barcode.barcode == search))).all()
+        query = db.session.query(Entity).filter((Entity.name.contains(search)) | 
+                                    (Entity.barcodes.any(Barcode.barcode == search)))
+    if paginate:
+        return query.paginate(per_page=items_per_page)
+    return query.all()
 
 # Search for items.
-@app.route('/search', methods=['POST'])
+@app.route('/search', methods=['GET'])
 def search():
-    search = request.form['search']
-    items = search_for_item(search)
+    # search = request.form['search']
+    search = request.args.get('q')
+    items = search_for_item(search, paginate=True)
+    # If there is only one item, redirect to its details.
+    if items.total == 1:
+        return redirect(url_for('details', item_id=items.items[0].id, q=search))
+    
+    # paginate the results using sqlalchemy.
     return render_template('base.html', items=items, search=search, show_parent=True, owners=db.session.query(Owner).all())
 
 @app.route('/edit/<int:item_id>', methods=['GET'])
@@ -53,7 +67,8 @@ def edit(item_id):
         photos_base64.append(base64.b64encode(photo.image).decode('utf-8'))
     properties = db.session.query(Property).all()
     owners = db.session.query(Owner).all()
-    return render_template('edit.html', detailedItem=item, items=item.children, photos_base64=photos_base64, editing=True, properties=properties, owners=owners)
+    children = db.session.query(Entity).filter_by(parent_id=item_id).paginate(per_page=items_per_page)
+    return render_template('edit.html', detailedItem=item, items=children, photos_base64=photos_base64, editing=True, properties=properties, owners=owners)
 
 @app.route('/add', methods=['GET'])
 def add():
@@ -202,7 +217,7 @@ def delete(item_id):
     return redirect(url_for('index'))
 
 def select_all(request):
-    path = request.referrer.split('/')[3:] # Remove the http://localhost:5000/ or any other domain.
+    path = request.referrer.split('?')[0].split('/')[3:] # Remove the http://localhost:5000/ or any other domain.
     if path == ['']:
         return "Modifying all root items in the database is not allowed", 406
     if path[0] == 'search':
@@ -214,6 +229,7 @@ def select_all(request):
         children = db.one_or_404(Entity, id).children
         items = [child.id for child in children]
         return items, 200
+    return "Invalid request", 400
 
 @app.route('/delete_multiple', methods=['POST'])
 def delete_multiple():

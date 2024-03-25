@@ -28,8 +28,8 @@
                 {% endif %}{% endif %}
             </div>
             <div class="search-container">
-                <form action="/search" method="POST">
-                    <input type="text" name="search" id="search" placeholder="Search for any item..." value="{% if search %}{{ search }}{% endif %}"
+                <form action="/search" method="GET">
+                    <input type="text" name="q" id="search" placeholder="Search for any item..." value="{% if search %}{{ search }}{% endif %}"
                     autocomplete="off" onfocus="this.select();" {% if not adding and not editing %}autofocus{% endif %} />
                 </form>
             </div>
@@ -56,7 +56,7 @@
         {% block topContainer %}
         {% endblock %}
         {% block table %}
-        {% if items|length > 0 %}
+        {% if items.items|length > 0 %}
         <div class="table-container">
             <div class="delete-dialog dialog-box" id="delete-dialog">
                 <p>Are you sure you want to delete the selected items?</p>
@@ -100,7 +100,7 @@
                     <th>Children</th>
                     <th></th>
                 </tr>
-                {% for item in items %}
+                {% for item in items.items %}
                 <tr title="Item ID: {{ item.id }}&#10;Created: {{ item.created }}&#10;Modified: {{ item.modified }}" >
                     <td>
                         <input type="checkbox" id="{{ item.id }}" class="select" />
@@ -155,6 +155,40 @@
             </div>
             <p id="table-error-message"></p>
             <script src="{{ url_for('static', filename='checkboxes.js') }}"></script>
+            <div class="page-items">
+                {{ items.first }} - {{ items.last }} of {{ items.total }}
+            </div>
+            <div class="pagination buttons">
+            {% set args = request.args.copy() %}
+            {% set _ = args.pop('page', None) %}
+            {% if detailedItem %}
+                {% set _ = args.update({'item_id': detailedItem.id}) %}
+            {% endif %}
+
+            {% if items.has_prev %}
+                <a href="{{ url_for(request.endpoint, page=items.prev_num, **args) }}">
+                    <button class="button">&lt;</button>
+                </a>
+            {% endif %}
+            {% for page in items.iter_pages() %}
+                {% if page %}
+                {% if page != items.page %}
+                    <a href="{{ url_for(request.endpoint, page=page, **args) }}">
+                        <button class="button">{{ page }}</button>
+                    </a>
+                {% else %}
+                    <button class="button button-selected">{{ page }}</button>
+                {% endif %}
+                {% else %}
+                <button class="button button-disabled">...</button>
+                {% endif %}
+            {% endfor %}
+            {% if items.has_next %}
+                <a href="{{ url_for(request.endpoint, page=items.next_num, **args) }}">
+                    <button class="button">&gt;</button>
+                </a>
+            {% endif %}
+            </div>
         </div>
         {% endif %}
         {% endblock %}

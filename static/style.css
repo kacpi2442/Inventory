@@ -112,7 +112,7 @@ table .buttons{
     flex-direction: row;
 }
 
-.buttons .button {
+.buttons .button{
     padding: 10px;
     color: #fff;
     cursor: pointer;
@@ -121,6 +121,23 @@ table .buttons{
     background-color: #369bf4;
     flex-grow: 1;
     text-align: center;
+}
+
+.pagination a{
+    text-decoration: none;
+    color: white;
+    flex-grow: 1;
+    display: flex;
+}
+
+.page-items{
+    margin: 0 auto;
+    width: fit-content;
+}
+
+.pagination {
+    width: fit-content;
+    margin: 0 auto;
 }
 
 .buttons .button:hover {
@@ -223,12 +240,16 @@ div.search-container form{
     border-left: 0px;
 }
 
-a.button-selected{
-    background-color: #369bf4 !important;
+.button-selected{
+    background-color: #247cc9 !important;
+}
+
+.button-disabled{
+    background-color: #4f4f4f !important;
 }
 
 a.button-selected:hover{
-    background-color: #247cc9 !important;
+    background-color: #1c64a3 !important;
 }
 
 a.button-selected svg{
