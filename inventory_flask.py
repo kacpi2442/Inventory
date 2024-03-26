@@ -72,9 +72,10 @@ def edit(item_id):
 
 @app.route('/add', methods=['GET'])
 def add():
+    parent_id = request.args.get('p_id')
     properties = db.session.query(Property).all()
     owners = db.session.query(Owner).all()
-    return render_template('edit.html', adding=True, properties=properties, owners=owners)
+    return render_template('edit.html', adding=True, properties=properties, owners=owners, parent_id=parent_id)
 
 
 @app.route('/update', methods=['POST'])

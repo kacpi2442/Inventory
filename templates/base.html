@@ -37,7 +37,11 @@
                 {% if adding %}
                 <a href="/" class="button button-selected">
                 {% else %}
-                <a href="/add" class="button">
+                    {% if detailedItem %}
+                    <a href="/add?p_id={{detailedItem.id}}" class="button">
+                    {% else %}
+                    <a href="/add" class="button">
+                    {% endif %}
                 {% endif %}
                     <i data-lucide="plus"></i>
                 </a>
