@@ -96,7 +96,12 @@ def update():
         if data['parent'] == '':
             item.parent_id = None
         else:
-            item.parent_id = data['parent']
+            # Get parent by barcode.
+            parent = db.session.query(Entity).filter(Entity.barcodes.any(Barcode.barcode == data['parent'])).first()
+            if parent is None:
+                # Get parent by ID
+                parent = db.get_or_404(Entity, data['parent'])
+            item.parent_id = parent.id
         # Remove all the barcodes.
         barcodes = db.session.query(Barcode).filter_by(entity_id=item.id).all()
         for barcode in barcodes:

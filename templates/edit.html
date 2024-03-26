@@ -11,8 +11,8 @@
 <input type="text" id="name" name="name" value="{% if detailedItem %}{{ detailedItem.name }}{% endif %}" autocomplete="off" required>
 <p>Barcodes</p>
 <input type="text" id="barcode" name="barcode" value="{% if detailedItem %}{% if detailedItem.barcodes|length > 0 %}{% for barcode in detailedItem.barcodes %}{{ barcode.barcode }}{% if not loop.last %},{% endif %}{% endfor %}{% endif %}{% endif %}" autocomplete="off" autofocus>
-<p>Parent ID</p>
-<input type="number" id="parent" name="parent" value="{% if detailedItem %}{{ detailedItem.parent.id }}{% endif %}">
+<p>Parent Barcode or ID</p>
+<input type="text" id="parent" name="parent" value="{% if detailedItem %}{{ detailedItem.parent.id }}{% endif %}">
 <p>Owners</p>
 <div id="ownerships">
     {% if detailedItem %}{% for ownership in detailedItem.ownerships %}
