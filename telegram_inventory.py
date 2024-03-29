@@ -25,12 +25,6 @@ class TelegramInventoryBot():
         self.application = Application.builder().token(token).build()
         self.dbSession = dbSession
         self.tmpDir = tempfile.TemporaryDirectory()
-
-        # on different commands - answer in Telegram
-        # self.application.add_handler(CommandHandler("start", self.start))
-        # self.application.add_handler(MessageHandler(filters.PHOTO & ~filters.COMMAND & ~filters.REPLY, self.photo_received))
-        # self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND & ~filters.REPLY, self.text_received))
-        # self.application.add_handler(MessageHandler(filters.REPLY, self.handle_reply))
         conv_handler = ConversationHandler(
             entry_points=[MessageHandler(~filters.REPLY & ~filters.COMMAND, self.handle_barcode),
                           CommandHandler("start", self.start),
@@ -56,8 +50,6 @@ class TelegramInventoryBot():
                 return func(self, *args, **kwargs)
             else:
                 return not_authorized(self, *args, **kwargs)
-                # args[0].message.reply_text("You are not authorized to use this bot.")
-                # return ConversationHandler.END
         return wrapper
     
     @restricted
@@ -82,16 +74,11 @@ class TelegramInventoryBot():
                 reply_to_message_id=update.message.message_id)
             return SELECT_PARENT
         context.user_data['parent'] = item.id
-        # await update.message.reply_html(
-        #     f'Enter the child barcode or ID.\nType /cancel to cancel.', 
-        #     reply_markup=ForceReply(selective=True), 
-        #     reply_to_message_id=update.message.message_id)
         await self.showItemsInfo(update, item.id, context, desc_prefix=f'Parent selected.\nEnter child barcode or ID to assign.\n\n', searchByID=True)
         return ASSIGN_PARENT
     
     @restricted
     async def assign_parent(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        # query = update.message.text
         query = (await self.returnBarcodesOrQueryFromUpdate(update))[0]
         item = self.dbSession.query(Entity).filter(Entity.barcodes.any(Barcode.barcode == query)).first()
         if not item:
@@ -103,11 +90,8 @@ class TelegramInventoryBot():
                 reply_to_message_id=update.message.message_id)
             return ASSIGN_PARENT
         parent = context.user_data['parent']
-        # item.parent_id = parent
         self.dbSession.query(Entity).filter(Entity.id == item.id).update({Entity.parent_id: parent})
         self.dbSession.commit()
-        # await update.message.reply_html(
-        #     f'Assigned {item.name} as a child of {self.dbSession.query(Entity).get(parent).name}.')
         await self.showItemsInfo(update, item.id, context, desc_prefix=f'Parent assigned.\nType /cancel to cancel or enter another barcode or ID to assign next item.\n\n', searchByID=True)
         return ASSIGN_PARENT
 

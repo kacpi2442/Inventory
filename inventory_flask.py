@@ -27,7 +27,6 @@ with app.app_context():
 
 items_per_page = 25
 
-
 def restricted(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -72,14 +71,12 @@ def search_for_item(search, paginate=False):
 @app.route('/search', methods=['GET'])
 @restricted
 def search():
-    # search = request.form['search']
     search = request.args.get('q')
     items = search_for_item(search, paginate=True)
     # If there is only one item, redirect to its details.
     if items.total == 1:
         return redirect(url_for('details', item_id=items.items[0].id, q=search))
     
-    # paginate the results using sqlalchemy.
     return render_template('base.html', items=items, search=search, show_parent=True, owners=db.session.query(Owner).all())
 
 @app.route('/edit/<int:item_id>', methods=['GET'])
@@ -108,7 +105,6 @@ def add():
 @app.route('/update', methods=['POST'])
 @restricted
 def update():
-    # {"id":"4","name":"Testowy","barcode":["2137"],"parent":"3","ownerships":[{"owner":"1","own":"70.00"},{"owner":"2","own":"20.00"},{"owner":"New owner","own":"10"}],"properties":[{"property":"1","value":"68 kg"},{"property":"2","value":"175 cm"},{"property":"new prop","value":"new val"}]}
     try:
         data = json.loads(request.data)
         item_id = data['id']
