@@ -64,6 +64,13 @@ class Barcode(Base):
     entity_id = Column(Integer, ForeignKey('entity.id'), primary_key=True)
     barcode = Column(String(100), unique=True, primary_key=True)
 
+class User(Base):
+    __tablename__ = 'user'
+
+    id = Column(Integer, primary_key=True)
+    telegram_id = Column(Integer, unique=True, nullable=True)
+    default_owner_id = Column(Integer, ForeignKey('owner.id'), nullable=True)
+
 idx_entity_name = Index('idx_entity_name', Entity.name)
 idx_property_name = Index('idx_property_name', Property.name)
 idx_owner_name = Index('idx_owner_name', Owner.name)

@@ -1,8 +1,9 @@
+from functools import wraps
 import tempfile
 import io
 from telegram import ForceReply, Update, ReplyKeyboardRemove
 from telegram.ext import Application, ConversationHandler, ContextTypes, MessageHandler, filters, CommandHandler
-from models import Entity, Barcode
+from models import Entity, Barcode, User, Ownership
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import zxingcpp
@@ -44,6 +45,22 @@ class TelegramInventoryBot():
         self.application.add_handler(conv_handler)
         print("Bot initialized.")
 
+    def restricted(func):
+        @wraps(func)
+        async def not_authorized(self, *args, **kwargs):
+            await args[0].message.reply_text("You are not authorized to use this bot.")
+            return ConversationHandler.END
+        def wrapper(self, *args, **kwargs):
+            user = self.dbSession.query(User).filter(User.telegram_id == args[0].message.from_user.id).first()
+            if user:
+                return func(self, *args, **kwargs)
+            else:
+                return not_authorized(self, *args, **kwargs)
+                # args[0].message.reply_text("You are not authorized to use this bot.")
+                # return ConversationHandler.END
+        return wrapper
+    
+    @restricted
     async def assign_parent_prompt(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.message.reply_html(
             f'Enter the parent barcode or ID.\nType /cancel to cancel.', 
@@ -51,6 +68,7 @@ class TelegramInventoryBot():
             reply_to_message_id=update.message.message_id)
         return SELECT_PARENT
     
+    @restricted
     async def select_parent(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         # query = update.message.text
         query = (await self.returnBarcodesOrQueryFromUpdate(update))[0]
@@ -71,6 +89,7 @@ class TelegramInventoryBot():
         await self.showItemsInfo(update, item.id, context, desc_prefix=f'Parent selected.\nEnter child barcode or ID to assign.\n\n', searchByID=True)
         return ASSIGN_PARENT
     
+    @restricted
     async def assign_parent(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         # query = update.message.text
         query = (await self.returnBarcodesOrQueryFromUpdate(update))[0]
@@ -92,6 +111,7 @@ class TelegramInventoryBot():
         await self.showItemsInfo(update, item.id, context, desc_prefix=f'Parent assigned.\nType /cancel to cancel or enter another barcode or ID to assign next item.\n\n', searchByID=True)
         return ASSIGN_PARENT
 
+    @restricted
     async def showItemsInfo(self, update: Update, query, context: ContextTypes.DEFAULT_TYPE, desc_prefix=None, searchByID=False) -> None:
         if searchByID:
             items = [self.dbSession.query(Entity).get(query)]
@@ -134,6 +154,7 @@ class TelegramInventoryBot():
                 await update.message.reply_html(rf"{description}")
         return ConversationHandler.END
     
+    @restricted
     async def returnBarcodesOrQueryFromUpdate(self, update: Update):
         if (update.message.photo):
             photoFileId = update.message.photo[-1].file_id
@@ -149,6 +170,7 @@ class TelegramInventoryBot():
             return [update.message.text]
         return None
     
+    @restricted
     async def handle_barcode(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         ret = ConversationHandler.END # TODO: Really think if this is the best way to handle this?
         barcodes = await self.returnBarcodesOrQueryFromUpdate(update)
@@ -161,6 +183,7 @@ class TelegramInventoryBot():
                 reply_to_message_id=update.message.message_id)
         return ret
 
+    @restricted
     async def adding(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         name = update.message.text
         barcode = context.user_data['adding']
@@ -171,6 +194,14 @@ class TelegramInventoryBot():
         barcodeEntity = Barcode(entity_id=item.id, barcode=barcode)
         self.dbSession.add(barcodeEntity)
         self.dbSession.commit()
+        
+        # Add default ownership
+        user = self.dbSession.query(User).filter(User.telegram_id == update.message.from_user.id).first()
+        if user and user.default_owner_id:
+            ownership = Ownership(entity_id=item.id, owner_id=user.default_owner_id, own=100)
+            self.dbSession.add(ownership)
+            self.dbSession.commit()
+
         await update.message.reply_html(
             rf'Added "{name}" to inventory under barcode: {barcode}.')
         return ConversationHandler.END
@@ -180,12 +211,14 @@ class TelegramInventoryBot():
         # TODO: Cancel forced reply
         return ConversationHandler.END
 
+    @restricted
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Send a message when the command /start is issued."""
         res = self.dbSession.query(Entity).all()
         await update.message.reply_html(
             f"Hi, send me a photo of a barcode to add it to the inventory or show the details of existing items.\nYou can also type the barcode or ID directly.\nType /assign_parent to assign a parent to an item.\n"
         )
+
     def run_bot(self):
         self.application.run_polling(allowed_updates=Update.ALL_TYPES)
 

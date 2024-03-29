@@ -388,3 +388,11 @@ div#table-modify-buttons{
     /* width: fit-content; */
     margin: 0 auto;
 }
+
+div.login-container{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 90vh;
+    flex-direction: column;
+}

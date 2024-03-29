@@ -37,7 +37,7 @@
 <select id="ownerships-sample" class="owners" style="display: none;">
     <option value="">No owner</option>
     {% for owner in owners %}
-    <option value="{{ owner.id }}">{{ owner.name }}</option>
+    <option value="{{ owner.id }}" {% if owner.id == default_owner %} selected {% endif %}>{{ owner.name }}</option>
     {% endfor %}
     <option value="new">* New owner *</option>
 </select>

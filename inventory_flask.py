@@ -1,12 +1,16 @@
+from functools import wraps
 import json
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, make_response, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Index
-from models import metadata, Entity, Barcode, EntityPhoto, EntityProperties, Property, Ownership, Owner
+from models import metadata, Entity, Barcode, EntityPhoto, EntityProperties, Property, Ownership, Owner, User
 from datetime import datetime
 import os
 import base64
 import traceback
+import hashlib
+import hmac
+
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'instance/inventory.db')
@@ -16,14 +20,32 @@ app = Flask(__name__, instance_relative_config=True)
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
 db = SQLAlchemy(app, metadata=metadata)
 
+with app.app_context():
+    db.create_all()
+    db.session.commit()
+    print("Database created.")
+
 items_per_page = 25
 
+
+def restricted(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            check_auth(request)
+        except ValueError as e:
+            return redirect(url_for('login'))
+        return func(*args, **kwargs)
+    return wrapper
+
 @app.route('/') 
+@restricted
 def index():
     items = db.session.query(Entity).filter_by(parent_id=None).paginate(per_page=items_per_page)
     return render_template('base.html', items=items, owners=db.session.query(Owner).all()) # Todo: Order by number of children.
 
 @app.route('/details/<int:item_id>', methods=['GET'])
+@restricted
 def details(item_id):
     item = db.get_or_404(Entity, item_id)
     photos_base64 = []
@@ -48,6 +70,7 @@ def search_for_item(search, paginate=False):
 
 # Search for items.
 @app.route('/search', methods=['GET'])
+@restricted
 def search():
     # search = request.form['search']
     search = request.args.get('q')
@@ -60,6 +83,7 @@ def search():
     return render_template('base.html', items=items, search=search, show_parent=True, owners=db.session.query(Owner).all())
 
 @app.route('/edit/<int:item_id>', methods=['GET'])
+@restricted
 def edit(item_id):
     item = db.get_or_404(Entity, item_id)
     photos_base64 = []
@@ -71,14 +95,18 @@ def edit(item_id):
     return render_template('edit.html', detailedItem=item, items=children, photos_base64=photos_base64, editing=True, properties=properties, owners=owners)
 
 @app.route('/add', methods=['GET'])
+@restricted
 def add():
     parent_id = request.args.get('p_id')
     properties = db.session.query(Property).all()
     owners = db.session.query(Owner).all()
-    return render_template('edit.html', adding=True, properties=properties, owners=owners, parent_id=parent_id)
+    user = check_auth(request)
+    default_owner = user.default_owner_id if user is not None else None
+    return render_template('edit.html', adding=True, properties=properties, owners=owners, parent_id=parent_id, default_owner=default_owner)
 
 
 @app.route('/update', methods=['POST'])
+@restricted
 def update():
     # {"id":"4","name":"Testowy","barcode":["2137"],"parent":"3","ownerships":[{"owner":"1","own":"70.00"},{"owner":"2","own":"20.00"},{"owner":"New owner","own":"10"}],"properties":[{"property":"1","value":"68 kg"},{"property":"2","value":"175 cm"},{"property":"new prop","value":"new val"}]}
     try:
@@ -89,9 +117,7 @@ def update():
             item = Entity(name=data['name'], created=datetime.now(), modified=datetime.now())
             db.session.add(item)
             db.session.commit()
-            item = db.get_or_404(Entity, item.id)
-        else:
-            item = db.get_or_404(Entity, item_id)
+        item = db.get_or_404(Entity, item.id)
         item.name = data['name']
         # Try to update the parent.
         if data['parent'] == '':
@@ -179,6 +205,7 @@ def update():
 
 # Add a new photo.
 @app.route('/add_photo/<int:item_id>', methods=['POST'])
+@restricted
 def add_photo(item_id):
     item = db.session.query(Entity).get(item_id)
     photo = request.files['photo']
@@ -208,6 +235,7 @@ def delete_item_props(item_id):
         db.session.delete(photo)
 
 @app.route('/delete/<int:item_id>', methods=['POST', 'GET']) # Old method for deleting single item.
+@restricted
 def delete(item_id):
     item = db.session.query(Entity).get(item_id)
     if item.parent_id:
@@ -238,6 +266,7 @@ def select_all(request):
     return "Invalid request", 400
 
 @app.route('/delete_multiple', methods=['POST'])
+@restricted
 def delete_multiple():
     try:
         data = json.loads(request.data)
@@ -259,6 +288,7 @@ def delete_multiple():
         return str(e), 400
     
 @app.route('/change_ownership', methods=['POST'])
+@restricted
 def change_ownership():
     try:
         data = json.loads(request.data)
@@ -289,6 +319,7 @@ def change_ownership():
         return str(e), 400
 
 @app.route('/change_parent', methods=['POST'])
+@restricted
 def change_parent():
     try:
         data = json.loads(request.data)
@@ -311,8 +342,57 @@ def change_parent():
     except Exception as e:
         traceback.print_exc()
         return str(e), 400
+    
+def check_telegram_session(args: dict, outdate_days: int = 180):
+    # check if the data is outdated
+    if int(args['auth_date']) < datetime.now().timestamp() - 86400 * outdate_days:
+        raise ValueError(("Outdated data", 403))
+    # sort arguments by key
+    sorted_arguments = sorted(args.items())
+    # concatenate all arguments with "\n" as separator except hash
+    data_check_string = "\n".join([f"{key}={value}" for key, value in sorted_arguments if key != "hash"])
+    # create a hash of the data string and the bot token
+    secret_key = hashlib.sha256(os.getenv('BOT_TOKEN').encode('utf-8')).digest()
+    hash_check = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
+    # check if the hash is correct
+    if hash_check != args['hash']:
+        raise ValueError(("Invalid hash", 403))
+    # check if user exists in the database
+    user = db.session.query(User).filter_by(telegram_id=args['id']).first()
+    if user is None:
+        if args['id'] != os.getenv('ADMIN_ID'):
+            raise ValueError(("User not in database", 403))
+        user = User(telegram_id=args['id'])
+        db.session.add(user)
+        db.session.commit()
+    return user
+    
+def check_auth(request):
+    if os.getenv('SKIP_LOGIN') == '1':
+        return None
+    telegram_auth = request.cookies.get('tg_auth')
+    if telegram_auth is None:
+        raise ValueError(("No telegram auth token", 403))
+    return check_telegram_session(json.loads(telegram_auth))
+
+@app.route('/login', methods=['GET'])
+def login():
+    # if there are any arguments
+    if len(request.args) > 0:
+        # Telegram login widget
+        arguments = request.args.to_dict()
+        try:
+            check_telegram_session(arguments, outdate_days=1)
+        except ValueError as e:
+            return e.args[0]
+        # set cookie with user data
+        response = redirect(url_for('index'))
+        response.set_cookie('tg_auth', json.dumps(arguments), httponly=True, secure=True, samesite='Strict')
+    else:
+        telegram_bot_name = os.getenv('TELEGRAM_BOT_NAME')
+        response = make_response(render_template('logged_out.html', telegram_bot_name=telegram_bot_name))
+        response.set_cookie('tg_auth', '', httponly=True, secure=True, samesite='Strict')
+    return response
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     app.run()
