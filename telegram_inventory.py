@@ -43,6 +43,7 @@ class TelegramInventoryBot():
         @wraps(func)
         async def not_authorized(self, *args, **kwargs):
             await args[0].message.reply_text("You are not authorized to use this bot.")
+            print(f"Unauthorized bot access attempt by {args[0].message.from_user.id} ({args[0].message.from_user.username})")
             return ConversationHandler.END
         def wrapper(self, *args, **kwargs):
             user = self.dbSession.query(User).filter(User.telegram_id == args[0].message.from_user.id).first()

@@ -33,6 +33,7 @@ def restricted(func):
         try:
             check_auth(request)
         except ValueError as e:
+            print('Unauthorized access attempt by IP:', request.remote_addr)
             return redirect(url_for('login'))
         return func(*args, **kwargs)
     return wrapper
@@ -357,6 +358,7 @@ def check_telegram_session(args: dict, outdate_days: int = 180):
     user = db.session.query(User).filter_by(telegram_id=args['id']).first()
     if user is None:
         if args['id'] != os.getenv('ADMIN_ID'):
+            print(f"Unauthorized access attempt by user {args['id']} ({args['username']})")
             raise ValueError(("User not in database", 403))
         user = User(telegram_id=args['id'])
         db.session.add(user)
