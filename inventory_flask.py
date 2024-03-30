@@ -114,7 +114,7 @@ def update():
             item = Entity(name=data['name'], created=datetime.now(), modified=datetime.now())
             db.session.add(item)
             db.session.commit()
-        item = db.get_or_404(Entity, item.id)
+        item = db.get_or_404(Entity, item_id)
         item.name = data['name']
         # Try to update the parent.
         if data['parent'] == '':
