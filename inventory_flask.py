@@ -112,7 +112,7 @@ def update():
         if item_id == '':
             # Create a new item.
             new_item = Entity(name=data['name'], created=datetime.now(), modified=datetime.now())
-            db.session.add(item)
+            db.session.add(new_item)
             db.session.commit()
             item_id = new_item.id
         item = db.get_or_404(Entity, item_id)
