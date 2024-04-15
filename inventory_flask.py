@@ -55,6 +55,17 @@ def details(item_id):
     search = request.args.get('q')
     return render_template('details.html', detailedItem=item, items=children, photos_base64=photos_base64, owners=db.session.query(Owner).all(), search=search)
 
+@app.route('/get_photo/<int:item_id>/<int:photo_id>', methods=['GET'])
+@restricted
+def get_photo(item_id, photo_id):
+    photo = db.session.query(EntityPhoto).filter_by(entity_id=item_id).all()
+    if photo is None or len(photo) <= photo_id:
+        # return "Photo not found", 404
+        return json.dumps({"photo": ""}), 404
+    photo_base64 =  base64.b64encode(photo[photo_id].image).decode('utf-8')
+    # return json
+    return json.dumps({"photo": photo_base64})
+
 def search_for_item(search, paginate=False):
     if search.startswith('@ '):
         deep_search = search[2:]

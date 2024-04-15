@@ -46,6 +46,13 @@
         {% endif %}
         {% if not adding %}
         <input type="file" name="photo" id="photo-upload" accept="image/jpeg" style="display: none;">
+        <input type="hidden" name="photo_id" value="0">
+        <div class="buttons">
+            <button id="prev-button" class="prev-button button"><i data-lucide="arrow-left"></i></button>
+            <label for="photo-upload" class="upload-button button"><i data-lucide="upload"></i></label>
+            <button class="delete-button button"><i data-lucide="trash"></i></button>
+            <button id="next-button" class="next-button button"><i data-lucide="arrow-right"></i></button>
+        </div>
         <script>
             document.getElementById('photo-upload').addEventListener('change', function(e) {
                 var file = e.target.files[0];
@@ -64,15 +71,29 @@
                 reader.readAsDataURL(file);
                 // log success or error
                 console.log('Photo uploaded');
-
+            });
+            
+            function getPhoto(photo_id) {
+                // endpoint returns base64 encoded image
+                fetch('/get_photo/{{ detailedItem.id }}/' + photo_id)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.photo) {
+                        document.querySelector('.itemImage img').src = 'data:image/jpeg;base64, ' + data.photo;
+                        document.querySelector('input[name="photo_id"]').value = photo_id;
+                    }
+                });
+            }
+                    
+            document.getElementById('next-button').addEventListener('click', function() {
+                var photo_id = parseInt(document.querySelector('input[name="photo_id"]').value);
+                getPhoto(photo_id + 1);
+            });
+            document.getElementById('prev-button').addEventListener('click', function() {
+                var photo_id = parseInt(document.querySelector('input[name="photo_id"]').value);
+                getPhoto(photo_id - 1);
             });
         </script>
-        <div class="buttons">
-            <label class="next-button button"><i data-lucide="arrow-left"></i></label>
-            <label for="photo-upload" class="upload-button button"><i data-lucide="upload"></i></label>
-            <label class="delete-button button"><i data-lucide="trash"></i></label>
-            <label class="prev-button button"><i data-lucide="arrow-right"></i></label>
-        </div>
         {% endif %}
     </div>
 </div>
