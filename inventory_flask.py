@@ -309,7 +309,7 @@ def change_ownership():
         if items == -1: # If -1, all items are selected.
             selectAll = select_all(request)
             if selectAll[1] != 200:
-                return selectAll
+                return selectAll # return error message.
             items = selectAll[0]
         for item_id in items:
             item = db.get_or_404(Entity, item_id)
@@ -336,7 +336,12 @@ def change_parent():
             parent = db.get_or_404(Entity, data['parent_id'])
             parent_id = parent.id
         else:
-            parent_id = None
+            # parent_id = None
+            # search by barcode
+            parent = db.session.query(Entity).filter(Entity.barcodes.any(Barcode.barcode == data['parent_id'])).first()
+            if parent is None:
+                return "Parent not found", 404
+            parent_id = parent.id
         items = data['selected']
         if items == -1: # If -1, all items are selected.
             selectAll = select_all(request)

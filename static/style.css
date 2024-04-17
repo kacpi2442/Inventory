@@ -361,16 +361,7 @@ div.details button.delete-button:hover{
     padding: 20px;
 }
 
-.dialog-box input[type=number]{
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 8px;
-    border: 1px solid #ccc;
-    box-sizing: border-box;
-    border-radius: 5px;
-}
-
-.dialog-box select{
+.dialog-box select, .dialog-box input{
     width: 100%;
     padding: 10px;
     margin-bottom: 8px;
